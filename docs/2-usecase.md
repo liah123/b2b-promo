@@ -1,6 +1,6 @@
 # 유스케이스 다이어그램 — Stamp Up
 
-`1-domain-definition.md` 5장(유스케이스)을 기반으로 작성. Mermaid는 UML 유스케이스 다이어그램 전용 문법이 없어 `flowchart`로 액터·시스템 경계·유스케이스를 표현한다.
+`1-domain-definition.md` 5장(유스케이스, v1.3)을 기반으로 작성. Mermaid는 UML 유스케이스 다이어그램 전용 문법이 없어 `flowchart`로 액터·시스템 경계·유스케이스를 표현한다. 로그인 인증 방식(access/refresh token)의 기술적 구현은 `3-PRD.md` 4·5장 참고.
 
 ```mermaid
 flowchart LR
@@ -15,6 +15,7 @@ flowchart LR
             UC02([로그인])
             UC03([마이페이지 조회/수정])
             UC04([비밀번호 변경])
+            UC05([로그아웃])
         end
 
         subgraph mission["미션·스탬프"]
@@ -45,6 +46,7 @@ flowchart LR
     customer --> UC02
     customer --> UC03
     customer --> UC04
+    customer --> UC05
     customer --> UC10
     customer --> UC11
     customer --> UC12
@@ -56,6 +58,7 @@ flowchart LR
     admin --> UC02
     admin --> UC03
     admin --> UC04
+    admin --> UC05
     admin --> UC30
     admin --> UC31
     admin --> UC32
