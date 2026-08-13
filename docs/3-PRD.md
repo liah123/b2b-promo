@@ -1,7 +1,7 @@
 # PRD — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
-버전: v1.4 (작성일: 2026-08-13, v1.3→v1.4: docs 정합성 검토 — 근거 문서 버전 갱신, 5.2절 pages 목록에 스탬프 홈 화면 추가 누락 수정)
-근거 문서: `docs/1-domain-definition.md` (v1.5)
+버전: v1.5 (작성일: 2026-08-13, v1.4→v1.5: docs 정합성 검토 — 근거 문서 버전 갱신, 5.2절 인덱스 목록에 reward_redemptions(user_id) 누락분 추가)
+근거 문서: `docs/1-domain-definition.md` (v1.6)
 
 ---
 
@@ -140,7 +140,8 @@
   - tables: users, missions, mission_participations, stamp_transactions,
             rewards, reward_redemptions, refresh_tokens
   - 주요 인덱스: users.email(unique), mission_participations(mission_id,user_id) unique,
-                stamp_transactions(user_id, ingredient_type), refresh_tokens(user_id), refresh_tokens(token) unique
+                stamp_transactions(user_id, ingredient_type), reward_redemptions(user_id),
+                refresh_tokens(user_id), refresh_tokens(token) unique
 ```
 - refresh_tokens: 로그아웃/재발급 시 폐기(revoke) 처리를 위해 DB에 저장 (id, user_id, token, expires_at, revoked_at). 회전(rotation) 정책은 MVP 범위 밖 — 단순 폐기만 지원.
   - ponytail: refresh token을 DB 테이블 1개로만 관리 (Redis blacklist 등 별도 저장소 없음), 트래픽 늘면 Redis 캐시 레이어 도입 고려

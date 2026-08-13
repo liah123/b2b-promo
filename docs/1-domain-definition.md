@@ -1,6 +1,6 @@
 # 도메인 정의서 — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
-버전: v1.5 (최종 수정일: 2026-08-13, 변경 이력은 11장 참고)
+버전: v1.6 (최종 수정일: 2026-08-13, 변경 이력은 11장 참고)
 
 ## 1. 개요
 Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래처 담당자를 대상으로, 관리자가 등록한 미션형 프로모션에 참여하고 완료 시 스탬프를 획득하여 리워드로 교환하는 웹 애플리케이션이다. 관리자는 미션과 리워드를 등록·관리하고, 거래처 담당자는 로그인 후 미션에 참여·완료하여 스탬프를 쌓고 이를 리워드로 교환한다. 교육용 바이브코딩 실습 MVP로, 핵심 흐름(미션 참여 → 미션 완료 → 스탬프 획득 → 리워드 교환)에 집중한다.
@@ -21,7 +21,7 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 | User | 거래처 담당자 또는 관리자 계정 | userId, email, password, name, role(CUSTOMER/ADMIN), createdAt |
 | Mission | 관리자가 등록하는 미션형 프로모션 | missionId, title, description, startAt, endAt, completionCondition, ingredientType(지급 재료 종류, 예: 양파), stampCount(지급 재료 스탬프 개수), status(예정(PENDING)/진행중(ACTIVE)/종료(ENDED)), createdBy |
 | MissionParticipation | 사용자의 미션 참여 기록 (사용자-미션 조합당 1건) | participationId, userId, missionId, status(참여중(JOINED)/완료(COMPLETED)), joinedAt, completedAt |
-| StampTransaction | 재료 스탬프 증감 이력 | transactionId, userId, ingredientType(재료 종류), type(적립(EARN)/차감(USE)), amount(항상 양수), reason(미션완료/리워드교환), relatedMissionId, relatedRedemptionId, createdAt |
+| StampTransaction | 재료 스탬프 증감 이력 | transactionId, userId, ingredientType(재료 종류), type(적립(EARN)/차감(USE)), amount(항상 양수), reason(예: 적립 확인/쿠폰 사용), relatedMissionId, relatedRedemptionId, createdAt |
 | Reward | 재료 스탬프 조합으로 교환하는 요리(리워드) | rewardId, name(요리명, 예: 카레), description, recipe(필요 재료 목록: [{ingredientType, quantity}]), status(활성(ACTIVE)/비활성(INACTIVE)) |
 | RewardRedemption | 사용자의 리워드(요리) 교환 내역 | redemptionId, userId, rewardId, redeemedAt (차감된 재료별 수량은 관련 StampTransaction 레코드들로 조회) |
 
@@ -120,3 +120,4 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 | v1.3 | 2026-08-13 | docs 정합성 검토 — PRD(3-PRD.md)의 로그아웃 기능과 맞춰 5장 공통 유스케이스에 "로그아웃" 추가 (2-usecase.md도 동기화) |
 | v1.4 | 2026-08-13 | 7장에 관리자 계정 생성 방식 규칙 추가 (회원가입은 CUSTOMER 전용, ADMIN은 DB seed로 수동 생성) |
 | v1.5 | 2026-08-13 | 1장에 UI 표시 문구와 내부 엔티티명이 다르다는 안내 추가 (매핑은 `7-wireframe.md` 0장 기준, 엔티티/상태값 자체는 변경 없음) |
+| v1.6 | 2026-08-13 | docs 정합성 검토 — 3장 StampTransaction.reason 예시를 4-user-scenari.md/7-wireframe.md/9-plan.md가 이미 일관되게 쓰는 값("적립 확인"/"쿠폰 사용")으로 갱신 (게임형 문구 잔재였던 "미션완료/리워드교환" 예시 정정, 필드/타입 자체는 변경 없음) |

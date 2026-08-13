@@ -1,7 +1,7 @@
 # 프로젝트 구조 설계 원칙 — Stamp Up
 
 버전: v1.1 (작성일: 2026-08-13, v1.0→v1.1: docs 정합성 검토 — 근거 문서 버전 갱신, 6장 pages에 스탬프 홈 화면 추가, 7장 마이그레이션 파일 순서를 FK 의존성에 맞게 재정렬)
-근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.4), `docs/4-user-scenari.md` (v1.1)
+근거 문서: `docs/1-domain-definition.md` (v1.6), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.5), `docs/4-user-scenari.md` (v1.1)
 
 > 전제: 1인 개발·3일 완성 목표의 교육용 바이브코딩 MVP. 모든 원칙은 "이 정도 구조로 왜 충분한가"를 함께 명시하며, 문서 어디에도 없는 확장 포인트(DI 컨테이너, 이벤트버스, 마이크로서비스 분리 등)는 도입하지 않는다.
 

@@ -1,6 +1,6 @@
 -- Stamp Up DB 스키마 (PostgreSQL 17)
 -- 버전: v1.1 (작성일: 2026-08-13, v1.0->v1.1: 근거 문서 버전 갱신, DDL 내용 변경 없음)
--- 근거 문서: docs/8-erd.md (v1.1), docs/1-domain-definition.md (v1.5), docs/3-PRD.md (v1.4)
+-- 근거 문서: docs/8-erd.md (v1.1), docs/1-domain-definition.md (v1.6), docs/3-PRD.md (v1.5)
 -- 실행 순서대로 정의 (FK 참조 순서 고려). 상태값(enum성 컬럼)은 CHECK 제약으로 허용값을 제한한다.
 
 CREATE TABLE users (

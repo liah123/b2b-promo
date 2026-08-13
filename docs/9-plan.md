@@ -1,7 +1,7 @@
 # 개발 실행계획 — Stamp Up
 
-버전: v1.6 (작성일: 2026-08-13, v1.5→v1.6: DB-04 완료 처리 — 데모 미션·리워드 seed 작성·검증 완료조건 체크, DB 트랙(DB-01~04) 전부 완료)
-근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.4), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.3), `docs/8-erd.md` (v1.0), `docs/8-schema.sql` (v1.0), `docs/swagger.json` (1.0.0)
+버전: v1.7 (작성일: 2026-08-13, v1.6→v1.7: docs 정합성 검토 — 근거 문서 버전 갱신(8-erd/8-schema v1.0→v1.1 표기 정정 포함), FE-04 완료조건에 예정(PENDING) 미션 요청 버튼 비활성화 케이스 추가)
+근거 문서: `docs/1-domain-definition.md` (v1.6), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.5), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.4), `docs/8-erd.md` (v1.1), `docs/8-schema.sql` (v1.1), `docs/swagger.json` (1.0.0)
 
 > 전제: 1인 개발·3일 완성 교육용 MVP. Task는 "한 사람이 이어서 반나절~하루 안에 끝낼 수 있는 크기"로 분해했다. CI/CD·Docker·모니터링·E2E 자동화 프레임워크, MVP 제외 범위(승인 워크플로우/알림/검색/랭킹 등) Task는 만들지 않는다.
 > UI 표시 문구는 `7-wireframe.md` 0장 매핑(적립 항목/쿠폰·혜택 등)을 따르고, 코드 식별자는 도메인 정의서 이름(Mission/Reward 등)을 그대로 유지한다.
@@ -219,9 +219,9 @@ flowchart LR
 **선행 Task**: DB-01
 
 **완료 조건**
-- [ ] `npm run dev` 후 `GET /health`가 200과 `{"status":"ok"}`를 반환한다.
-- [ ] 의도적으로 throw한 에러 라우트가 500과 JSON `{message}`를 반환하고 프로세스가 죽지 않는다.
-- [ ] 프론트 origin에서의 요청이 CORS 에러 없이 통과하고 쿠키가 함께 전송된다.
+- [x] `npm run dev` 후 `GET /health`가 200과 `{"status":"ok"}`를 반환한다.
+- [x] 의도적으로 throw한 에러 라우트가 500과 JSON `{message}`를 반환하고 프로세스가 죽지 않는다.
+- [x] 프론트 origin에서의 요청이 CORS 에러 없이 통과하고 쿠키가 함께 전송된다.
 
 ---
 
@@ -518,7 +518,7 @@ flowchart LR
 - [ ] 카드 클릭 시 해당 항목 상세로 이동한다.
 - [ ] 상세에서 [적립 요청하기] 클릭 시 참여가 생성되고 버튼이 비활성/상태 텍스트로 바뀐다.
 - [ ] 이미 참여한 항목은 상세 진입 시부터 요청 버튼이 비활성 상태다.
-- [ ] 종료(ENDED) 항목 상세에서는 요청 버튼이 비활성이다.
+- [ ] 예정(PENDING)·종료(ENDED) 항목 상세에서는 요청 버튼이 비활성이다.
 - [ ] 데스크탑은 다열 카드 그리드, 모바일은 1열 세로 스크롤로 표시된다.
 
 ---

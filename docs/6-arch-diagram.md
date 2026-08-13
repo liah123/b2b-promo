@@ -1,7 +1,7 @@
 # 기술 아키텍처 다이어그램 — Stamp Up
 
 버전: v1.2 (작성일: 2026-08-13, v1.1→v1.2: docs 정합성 검토 — 근거 문서 버전 갱신, 프론트엔드 컴포넌트 다이어그램에 스탬프 홈 페이지 추가)
-근거 문서: `docs/3-PRD.md` (v1.4, 5장), `docs/5-project-principle.md` (v1.1, 2장·6~7장)
+근거 문서: `docs/3-PRD.md` (v1.5, 5장), `docs/5-project-principle.md` (v1.1, 2장·6~7장)
 
 > 3-레이어(routes → controllers/services → db) 구조를 그대로 시각화한 정적 아키텍처 다이어그램 1개. PRD/설계원칙에 없는 로드밸런서·캐시 레이어·메시지 큐·별도 인증서버 등은 추가하지 않는다.
 

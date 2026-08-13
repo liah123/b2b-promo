@@ -1,7 +1,7 @@
 # ERD — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
 버전: v1.1 (작성일: 2026-08-13, v1.0→v1.1: 근거 문서 버전 갱신, 내용 변경 없음 — PRD v1.3→v1.4 변경분은 5.2절 pages 목록 추가뿐이라 ERD에 영향 없음)
-근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/3-PRD.md` (v1.4, 5장 기술스택/DB 테이블/인덱스)
+근거 문서: `docs/1-domain-definition.md` (v1.6), `docs/3-PRD.md` (v1.5, 5장 기술스택/DB 테이블/인덱스)
 
 ---
 
