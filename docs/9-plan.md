@@ -1,6 +1,6 @@
 # 개발 실행계획 — Stamp Up
 
-버전: v1.2 (작성일: 2026-08-13, v1.1→v1.2: docs 정합성 검토 — PUT 표기를 PATCH로 통일해 swagger.json과 일치시키고, 근거 문서에 swagger.json 추가)
+버전: v1.6 (작성일: 2026-08-13, v1.5→v1.6: DB-04 완료 처리 — 데모 미션·리워드 seed 작성·검증 완료조건 체크, DB 트랙(DB-01~04) 전부 완료)
 근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.4), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.3), `docs/8-erd.md` (v1.0), `docs/8-schema.sql` (v1.0), `docs/swagger.json` (1.0.0)
 
 > 전제: 1인 개발·3일 완성 교육용 MVP. Task는 "한 사람이 이어서 반나절~하루 안에 끝낼 수 있는 크기"로 분해했다. CI/CD·Docker·모니터링·E2E 자동화 프레임워크, MVP 제외 범위(승인 워크플로우/알림/검색/랭킹 등) Task는 만들지 않는다.
@@ -148,10 +148,10 @@ flowchart LR
 **선행 Task**: 없음
 
 **완료 조건**
-- [ ] `psql`로 `stampup` 데이터베이스에 접속된다.
-- [ ] `backend/.env.example`에 위 6개 키가 값 없이 모두 존재한다.
-- [ ] `git status`에 `backend/.env`가 나타나지 않는다.
-- [ ] `node -e "require('./src/db/pool').query('select 1')"` 상당의 확인이 에러 없이 성공한다.
+- [x] `psql`로 `stampup` 데이터베이스에 접속된다. (postgresql-mcp connection debug로 확인: status ok)
+- [x] `backend/.env.example`에 위 6개 키가 값 없이 모두 존재한다.
+- [x] `git status`에 `backend/.env`가 나타나지 않는다. (`git check-ignore -v`로 `.gitignore:13:.env` 규칙에 의해 제외됨을 확인)
+- [x] `node -e "require('./src/db/pool').query('select 1')"` 상당의 확인이 에러 없이 성공한다. (`OK: [ { '?column?': 1 } ]` 반환)
 
 ---
 
@@ -166,11 +166,11 @@ flowchart LR
 **선행 Task**: DB-01
 
 **완료 조건**
-- [ ] `npm run migrate`가 빈 DB에서 에러 없이 완료된다.
-- [ ] `\dt` 결과에 users, missions, mission_participations, rewards, reward_redemptions, stamp_transactions, refresh_tokens 7개 테이블이 존재한다.
-- [ ] 동일 `(mission_id, user_id)`로 mission_participations에 2건 INSERT 시 유니크 제약 위반 에러가 발생한다.
-- [ ] 동일 email로 users 2건 INSERT 시 유니크 제약 위반 에러가 발생한다.
-- [ ] `stamp_transactions.amount`에 0 또는 음수 INSERT 시 CHECK 제약 위반 에러가 발생한다.
+- [x] `npm run migrate`가 빈 DB에서 에러 없이 완료된다. (7개 파일 순차 적용, "done: 7 migration(s) applied")
+- [x] `\dt` 결과에 users, missions, mission_participations, rewards, reward_redemptions, stamp_transactions, refresh_tokens 7개 테이블이 존재한다.
+- [x] 동일 `(mission_id, user_id)`로 mission_participations에 2건 INSERT 시 유니크 제약 위반 에러가 발생한다. (`mission_participations_mission_id_user_id_key` 위반 확인)
+- [x] 동일 email로 users 2건 INSERT 시 유니크 제약 위반 에러가 발생한다. (`users_email_key` 위반 확인)
+- [x] `stamp_transactions.amount`에 0 또는 음수 INSERT 시 CHECK 제약 위반 에러가 발생한다. (`stamp_transactions_amount_check` 위반 확인)
 
 ---
 
@@ -184,9 +184,9 @@ flowchart LR
 **선행 Task**: DB-02
 
 **완료 조건**
-- [ ] `npm run seed:admin` 실행 후 users 테이블에 role='ADMIN' 행이 1건 존재한다.
-- [ ] 같은 스크립트를 2번 실행해도 ADMIN 행이 1건으로 유지되며 에러가 발생하지 않는다.
-- [ ] 저장된 password 컬럼 값이 평문이 아니다(bcrypt 해시 형식).
+- [x] `npm run seed:admin` 실행 후 users 테이블에 role='ADMIN' 행이 1건 존재한다. (user_id=1, admin@stampup.local)
+- [x] 같은 스크립트를 2번 실행해도 ADMIN 행이 1건으로 유지되며 에러가 발생하지 않는다. (2회차: "admin already exists")
+- [x] 저장된 password 컬럼 값이 평문이 아니다(bcrypt 해시 형식). (`$2a$10$...` 형식 확인)
 
 ---
 
@@ -199,9 +199,9 @@ flowchart LR
 **선행 Task**: DB-03
 
 **완료 조건**
-- [ ] `npm run seed:demo` 실행 후 missions에 status가 PENDING/ACTIVE/ENDED인 행이 각각 1건 이상 존재한다.
-- [ ] rewards에 status='ACTIVE' 2건 이상, 'INACTIVE' 1건이 존재하고 recipe가 `[{"ingredientType":..,"quantity":..}]` 형태의 JSONB다.
-- [ ] 모든 missions.created_by가 ADMIN 계정의 user_id를 참조한다.
+- [x] `npm run seed:demo` 실행 후 missions에 status가 PENDING/ACTIVE/ENDED인 행이 각각 1건 이상 존재한다. (3건, 상태별 1건씩)
+- [x] rewards에 status='ACTIVE' 2건 이상, 'INACTIVE' 1건이 존재하고 recipe가 `[{"ingredientType":..,"quantity":..}]` 형태의 JSONB다. (카레·김치찌개=ACTIVE, 된장찌개=INACTIVE, recipe_type=array 확인)
+- [x] 모든 missions.created_by가 ADMIN 계정의 user_id를 참조한다. (3건 모두 created_by=1, admin@stampup.local)
 
 ---
 
