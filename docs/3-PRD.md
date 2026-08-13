@@ -1,7 +1,7 @@
 # PRD — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
-버전: v1.3 (작성일: 2026-08-13, v1.2→v1.3: 게임형 미션/리워드 화면 문구를 일반 스탬프 적립/쿠폰 서비스 톤으로 갱신, 스탬프 홈 화면 추가)
-근거 문서: `docs/1-domain-definition.md` (v1.4)
+버전: v1.4 (작성일: 2026-08-13, v1.3→v1.4: docs 정합성 검토 — 근거 문서 버전 갱신, 5.2절 pages 목록에 스탬프 홈 화면 추가 누락 수정)
+근거 문서: `docs/1-domain-definition.md` (v1.5)
 
 ---
 
@@ -120,7 +120,7 @@
 ### 5.2 레이어 구조 (개략)
 ```
 [React 19 SPA]
-  - pages: Login/Signup, MissionList, MissionDetail, MyMissions,
+  - pages: Login/Signup, StampHome(첫 화면), MissionList, MissionDetail, MyMissions,
            Stamps, RewardList, MyRedemptions, MyPage,
            Admin/MissionManage, Admin/RewardManage
   - Zustand: 로그인 사용자 정보, access token(메모리 보관)

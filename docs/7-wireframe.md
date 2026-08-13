@@ -1,7 +1,7 @@
 # 와이어프레임 — Stamp Up
 
-버전: v1.2 (작성일: 2026-08-13, v1.1→v1.2: 게임형 미션/리워드 용어를 일반 스탬프 적립/쿠폰 서비스 톤으로 전면 변경, 스탬프 홈 화면 추가)
-근거 문서: `docs/1-domain-definition.md` (v1.4), `docs/3-PRD.md` (v1.2, 3장/4장), `docs/4-user-scenari.md` (v1.0), `docs/5-project-principle.md` (v1.0, 6장 프론트엔드 pages 목록)
+버전: v1.3 (작성일: 2026-08-13, v1.2→v1.3: docs 정합성 검토 — 근거 문서 버전 갱신)
+근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/3-PRD.md` (v1.4, 3장/4장), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1, 6장 프론트엔드 pages 목록)
 
 > 반응형 웹 UI(PRD 4장) 반영: 거래처 담당자(CUSTOMER)가 쓰는 모든 화면은 데스크탑/모바일 두 버전을 함께 표시한다. 데스크탑은 상단 가로 내비게이션 + 다열 그리드/표, 모바일은 상단 [메뉴] 아이콘 내비게이션 + 1열 세로 스크롤 카드로 통일한다. 관리자(ADMIN) 전용 화면은 사무실 데스크탑 사용을 전제로 데스크탑 1개만 표시한다 (PRD 기술제약: 모바일은 반응형 웹으로만 대응, 별도 앱 없음).
 

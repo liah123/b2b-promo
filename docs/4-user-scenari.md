@@ -1,7 +1,7 @@
 # 사용자 시나리오 — Stamp Up
 
 버전: v1.1 (작성일: 2026-08-13, v1.0→v1.1: 게임형 미션/리워드 시나리오 문구를 일반 스탬프 적립/쿠폰 서비스 톤으로 갱신)
-근거 문서: `docs/1-domain-definition.md` (v1.4), `docs/3-PRD.md` (v1.3)
+근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/3-PRD.md` (v1.4)
 
 ## 액터
 - 거래처 담당자 A (role=CUSTOMER)
