@@ -1,0 +1,987 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Stamp Up API",
+    "version": "1.0.0",
+    "description": "식자재 유통 B2B 미션형 프로모션·재료 스탬프·요리 리워드 교환 API"
+  },
+  "servers": [
+    { "url": "/api" }
+  ],
+  "tags": [
+    { "name": "auth", "description": "회원가입/로그인/토큰 재발급/로그아웃" },
+    { "name": "missions", "description": "미션(적립 항목) 조회 및 관리" },
+    { "name": "participations", "description": "미션 참여 및 완료 처리" },
+    { "name": "stamps", "description": "재료별 스탬프 보유량 및 이력" },
+    { "name": "rewards", "description": "리워드(요리) 조회 및 관리" },
+    { "name": "redemptions", "description": "리워드 교환 및 교환 내역" },
+    { "name": "users", "description": "내 정보 조회/수정" }
+  ],
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "회원가입 (CUSTOMER 전용)",
+        "description": "이메일/비밀번호/이름으로 CUSTOMER 계정을 생성한다. ADMIN 계정은 이 API로 생성할 수 없으며 DB seed로만 생성된다.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignupRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "가입 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "로그인",
+        "description": "이메일/비밀번호로 로그인하여 access token을 발급받는다. refresh token은 httpOnly 쿠키로 발급된다.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "로그인 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "access token 재발급",
+        "description": "httpOnly 쿠키로 전달된 refresh token이 유효한 경우 새 access token을 발급한다.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "재발급 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AccessTokenResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "로그아웃",
+        "description": "서버에 저장된 refresh token을 폐기(revoke)하고 클라이언트 토큰을 무효화한다.",
+        "responses": {
+          "204": { "description": "로그아웃 성공 (본문 없음)" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/missions": {
+      "get": {
+        "tags": ["missions"],
+        "summary": "미션(적립 항목) 목록 조회",
+        "parameters": [
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/LimitParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "미션 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Mission" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["missions"],
+        "summary": "미션 등록 (ADMIN 전용)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MissionCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "등록 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Mission" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/missions/{missionId}": {
+      "get": {
+        "tags": ["missions"],
+        "summary": "미션 상세 조회",
+        "parameters": [
+          { "$ref": "#/components/parameters/MissionIdParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "미션 상세",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Mission" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["missions"],
+        "summary": "미션 수정 (ADMIN 전용)",
+        "parameters": [
+          { "$ref": "#/components/parameters/MissionIdParam" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MissionUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "수정 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Mission" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/missions/{missionId}/status": {
+      "patch": {
+        "tags": ["missions"],
+        "summary": "미션 상태 수동 변경 (ADMIN 전용, 수동 종료 등 예외 처리)",
+        "description": "미션 상태는 참여 기간(startAt/endAt) 기준 자동 계산이 원칙이나, 관리자가 기간 중이라도 강제로 종료 등으로 전이시킬 수 있다.",
+        "parameters": [
+          { "$ref": "#/components/parameters/MissionIdParam" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MissionStatusUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "상태 변경 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Mission" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/participations": {
+      "post": {
+        "tags": ["participations"],
+        "summary": "미션 참여",
+        "description": "로그인한 사용자가 요청 본문의 missionId 미션에 참여한다. 이미 참여중이거나 완료한 미션에 재참여하는 경우, 또는 종료된 미션에 참여하는 경우 실패한다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "missionId": { "type": "integer", "format": "int64" }
+                },
+                "required": ["missionId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "참여 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MissionParticipation" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": {
+            "description": "이미 참여중/완료한 미션이거나 종료된 미션이라 참여할 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/participations/me": {
+      "get": {
+        "tags": ["participations"],
+        "summary": "내 미션 참여 목록 조회 (참여중/완료 구분)",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "참여 상태로 필터링",
+            "schema": { "$ref": "#/components/schemas/ParticipationStatus" }
+          },
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/LimitParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "내 참여 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MissionParticipation" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/participations/{participationId}/complete": {
+      "post": {
+        "tags": ["participations"],
+        "summary": "미션 완료 처리 (고객 셀프 테스트용 확인 요청)",
+        "description": "완료 조건 충족 처리를 하고 해당 미션의 재료 스탬프를 지급한다. /confirm과 동일한 서비스 로직(completeParticipation)을 호출하며, 이미 완료된 참여 건에 대한 재요청은 스탬프를 중복 지급하지 않고 idempotent하게 처리하거나 409로 거절한다.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ParticipationIdParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "완료 처리 성공 (이미 완료 상태였던 경우 idempotent 응답 포함)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MissionParticipation" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": {
+            "description": "이미 완료 처리되어 재지급이 불가능한 경우",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/participations/{participationId}/confirm": {
+      "post": {
+        "tags": ["participations"],
+        "summary": "미션 완료 확인 처리 (ADMIN 전용)",
+        "description": "관리자가 특정 참여 건을 완료 확인 처리한다. /complete와 동일한 서비스 로직(completeParticipation)을 호출하는 ADMIN 전용 진입점이며, 로직은 중복 구현하지 않는다.",
+        "parameters": [
+          { "$ref": "#/components/parameters/ParticipationIdParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "확인 처리 성공 (이미 완료 상태였던 경우 idempotent 응답 포함)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MissionParticipation" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": {
+            "description": "이미 완료 처리되어 재지급이 불가능한 경우",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stamps/balance": {
+      "get": {
+        "tags": ["stamps"],
+        "summary": "재료별 보유 스탬프 조회",
+        "responses": {
+          "200": {
+            "description": "재료별 보유량 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/StampBalance" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/stamps/history": {
+      "get": {
+        "tags": ["stamps"],
+        "summary": "내 스탬프 적립/차감 이력 조회",
+        "parameters": [
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/LimitParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "스탬프 이력 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/StampTransaction" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/rewards": {
+      "get": {
+        "tags": ["rewards"],
+        "summary": "리워드(요리) 목록 조회",
+        "parameters": [
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/LimitParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "리워드 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Reward" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["rewards"],
+        "summary": "리워드 등록 (ADMIN 전용)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RewardCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "등록 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Reward" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/rewards/{rewardId}": {
+      "patch": {
+        "tags": ["rewards"],
+        "summary": "리워드 수정 (ADMIN 전용)",
+        "parameters": [
+          { "$ref": "#/components/parameters/RewardIdParam" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RewardUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "수정 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Reward" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/rewards/{rewardId}/status": {
+      "patch": {
+        "tags": ["rewards"],
+        "summary": "리워드 활성/비활성 상태 변경 (ADMIN 전용)",
+        "parameters": [
+          { "$ref": "#/components/parameters/RewardIdParam" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RewardStatusUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "상태 변경 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Reward" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/redemptions": {
+      "post": {
+        "tags": ["redemptions"],
+        "summary": "리워드(요리) 교환",
+        "description": "요청 본문의 rewardId 리워드를 교환한다. 레시피에 명시된 모든 재료 종류를 필요 수량 이상 보유한 경우에만 교환할 수 있다. 재료 스탬프가 부족하거나 비활성 리워드인 경우 교환할 수 없다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rewardId": { "type": "integer", "format": "int64" }
+                },
+                "required": ["rewardId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "교환 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RewardRedemption" }
+              }
+            }
+          },
+          "400": {
+            "description": "필요 재료 스탬프 부족 또는 비활성 리워드",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": {
+            "description": "필요 재료 스탬프 부족 또는 비활성 리워드로 인한 교환 불가",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/redemptions/me": {
+      "get": {
+        "tags": ["redemptions"],
+        "summary": "내 리워드 교환 내역 조회",
+        "parameters": [
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/LimitParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "내 교환 내역 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RewardRedemption" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["users"],
+        "summary": "내 정보 조회",
+        "responses": {
+          "200": {
+            "description": "내 정보",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "patch": {
+        "tags": ["users"],
+        "summary": "내 정보 수정",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "수정 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/me/password": {
+      "patch": {
+        "tags": ["users"],
+        "summary": "비밀번호 변경",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PasswordUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "변경 성공 (본문 없음)" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "로그인 응답으로 발급된 access token을 Authorization: Bearer {token} 헤더로 전달한다."
+      }
+    },
+    "parameters": {
+      "MissionIdParam": {
+        "name": "missionId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "ParticipationIdParam": {
+        "name": "participationId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "RewardIdParam": {
+        "name": "rewardId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "PageParam": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "LimitParam": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "default": 20 }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "요청 값이 유효하지 않음",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "인증 필요 또는 access token이 유효하지 않음",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "권한 없음 (ADMIN 전용 API를 CUSTOMER가 호출)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "리소스를 찾을 수 없음",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "리소스 충돌 (예: 이메일 중복)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "에러 메시지" }
+        },
+        "required": ["message"]
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": ["CUSTOMER", "ADMIN"]
+      },
+      "MissionStatus": {
+        "type": "string",
+        "enum": ["PENDING", "ACTIVE", "ENDED"],
+        "description": "예정(PENDING)/진행중(ACTIVE)/종료(ENDED)"
+      },
+      "ParticipationStatus": {
+        "type": "string",
+        "enum": ["JOINED", "COMPLETED"],
+        "description": "참여중(JOINED)/완료(COMPLETED)"
+      },
+      "RewardStatus": {
+        "type": "string",
+        "enum": ["ACTIVE", "INACTIVE"],
+        "description": "활성(ACTIVE)/비활성(INACTIVE)"
+      },
+      "StampTransactionType": {
+        "type": "string",
+        "enum": ["EARN", "USE"],
+        "description": "적립(EARN)/차감(USE)"
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "format": "int64" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "email", "name", "role", "createdAt"]
+      },
+      "SignupRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password", "minLength": 8 },
+          "name": { "type": "string" }
+        },
+        "required": ["email", "password", "name"],
+        "description": "role은 항상 CUSTOMER로 생성되며 요청 본문으로 지정할 수 없다."
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" }
+        },
+        "required": ["email", "password"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" }
+        },
+        "required": ["accessToken", "user"],
+        "description": "refresh token은 응답 본문에 포함되지 않고 httpOnly 쿠키로 전달된다."
+      },
+      "AccessTokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" }
+        },
+        "required": ["accessToken"]
+      },
+      "Mission": {
+        "type": "object",
+        "properties": {
+          "missionId": { "type": "integer", "format": "int64" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "startAt": { "type": "string", "format": "date-time" },
+          "endAt": { "type": "string", "format": "date-time" },
+          "completionCondition": { "type": "string", "nullable": true },
+          "ingredientType": { "type": "string", "description": "지급되는 재료 종류 (예: 양파)" },
+          "stampCount": { "type": "integer", "minimum": 1, "description": "지급 재료 스탬프 개수" },
+          "status": { "$ref": "#/components/schemas/MissionStatus" },
+          "createdBy": { "type": "integer", "format": "int64", "description": "등록한 관리자(User)의 userId" }
+        },
+        "required": ["missionId", "title", "startAt", "endAt", "ingredientType", "stampCount", "status", "createdBy"]
+      },
+      "MissionCreateRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "startAt": { "type": "string", "format": "date-time" },
+          "endAt": { "type": "string", "format": "date-time" },
+          "completionCondition": { "type": "string" },
+          "ingredientType": { "type": "string" },
+          "stampCount": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["title", "startAt", "endAt", "ingredientType", "stampCount"]
+      },
+      "MissionUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "startAt": { "type": "string", "format": "date-time" },
+          "endAt": { "type": "string", "format": "date-time" },
+          "completionCondition": { "type": "string" },
+          "ingredientType": { "type": "string" },
+          "stampCount": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "MissionStatusUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/MissionStatus" }
+        },
+        "required": ["status"]
+      },
+      "MissionParticipation": {
+        "type": "object",
+        "properties": {
+          "participationId": { "type": "integer", "format": "int64" },
+          "missionId": { "type": "integer", "format": "int64" },
+          "userId": { "type": "integer", "format": "int64" },
+          "status": { "$ref": "#/components/schemas/ParticipationStatus" },
+          "joinedAt": { "type": "string", "format": "date-time" },
+          "completedAt": { "type": "string", "format": "date-time", "nullable": true }
+        },
+        "required": ["participationId", "missionId", "userId", "status", "joinedAt"]
+      },
+      "StampBalance": {
+        "type": "object",
+        "description": "재료 종류별 보유 스탬프 잔액 (StampTransaction 적립/차감 합계로 산출)",
+        "properties": {
+          "ingredientType": { "type": "string" },
+          "balance": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["ingredientType", "balance"]
+      },
+      "StampTransaction": {
+        "type": "object",
+        "properties": {
+          "transactionId": { "type": "integer", "format": "int64" },
+          "userId": { "type": "integer", "format": "int64" },
+          "ingredientType": { "type": "string" },
+          "type": { "$ref": "#/components/schemas/StampTransactionType" },
+          "amount": { "type": "integer", "minimum": 1, "description": "항상 양수" },
+          "reason": { "type": "string", "description": "예: 미션완료, 리워드교환" },
+          "relatedMissionId": { "type": "integer", "format": "int64", "nullable": true },
+          "relatedRedemptionId": { "type": "integer", "format": "int64", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["transactionId", "userId", "ingredientType", "type", "amount", "reason", "createdAt"]
+      },
+      "RecipeItem": {
+        "type": "object",
+        "properties": {
+          "ingredientType": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["ingredientType", "quantity"]
+      },
+      "Reward": {
+        "type": "object",
+        "properties": {
+          "rewardId": { "type": "integer", "format": "int64" },
+          "name": { "type": "string", "description": "요리명 (예: 카레)" },
+          "description": { "type": "string", "nullable": true },
+          "recipe": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecipeItem" },
+            "description": "필요 재료 목록 (재료 종류 + 필요 수량)"
+          },
+          "status": { "$ref": "#/components/schemas/RewardStatus" }
+        },
+        "required": ["rewardId", "name", "recipe", "status"]
+      },
+      "RewardCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "recipe": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecipeItem" },
+            "minItems": 1
+          }
+        },
+        "required": ["name", "recipe"]
+      },
+      "RewardUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "recipe": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecipeItem" }
+          }
+        }
+      },
+      "RewardStatusUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/RewardStatus" }
+        },
+        "required": ["status"]
+      },
+      "RewardRedemption": {
+        "type": "object",
+        "properties": {
+          "redemptionId": { "type": "integer", "format": "int64" },
+          "userId": { "type": "integer", "format": "int64" },
+          "rewardId": { "type": "integer", "format": "int64" },
+          "redeemedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["redemptionId", "userId", "rewardId", "redeemedAt"]
+      },
+      "UserUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" }
+        }
+      },
+      "PasswordUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": { "type": "string", "format": "password" },
+          "newPassword": { "type": "string", "format": "password", "minLength": 8 }
+        },
+        "required": ["currentPassword", "newPassword"]
+      }
+    }
+  }
+}

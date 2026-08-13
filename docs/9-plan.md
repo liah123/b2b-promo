@@ -1,7 +1,7 @@
 # 개발 실행계획 — Stamp Up
 
-버전: v1.0 (작성일: 2026-08-13)
-근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.4), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.3), `docs/8-erd.md` (v1.0), `docs/8-schema.sql` (v1.0)
+버전: v1.2 (작성일: 2026-08-13, v1.1→v1.2: docs 정합성 검토 — PUT 표기를 PATCH로 통일해 swagger.json과 일치시키고, 근거 문서에 swagger.json 추가)
+근거 문서: `docs/1-domain-definition.md` (v1.5), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.4), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.3), `docs/8-erd.md` (v1.0), `docs/8-schema.sql` (v1.0), `docs/swagger.json` (1.0.0)
 
 > 전제: 1인 개발·3일 완성 교육용 MVP. Task는 "한 사람이 이어서 반나절~하루 안에 끝낼 수 있는 크기"로 분해했다. CI/CD·Docker·모니터링·E2E 자동화 프레임워크, MVP 제외 범위(승인 워크플로우/알림/검색/랭킹 등) Task는 만들지 않는다.
 > UI 표시 문구는 `7-wireframe.md` 0장 매핑(적립 항목/쿠폰·혜택 등)을 따르고, 코드 식별자는 도메인 정의서 이름(Mission/Reward 등)을 그대로 유지한다.
@@ -44,6 +44,95 @@
 | FE-13 | 반응형 다듬기 + 에러 처리 + 전체 E2E 수동 QA | FE | FE-09, FE-10, FE-11, FE-12 |
 
 영역별 개수: DB 4 / BE 13 / FE 13 (총 30)
+
+### 1.1 Task 의존 관계 다이어그램
+
+화살표는 "선행 Task → 후행 Task" 방향이다. 같은 열에 있는 Task들은 선행 조건만 충족되면 서로 병렬로 진행할 수 있다.
+
+```mermaid
+flowchart LR
+    subgraph DBTrack["데이터베이스"]
+        DB01["DB-01<br/>DB 생성·env·pg Pool"]
+        DB02["DB-02<br/>마이그레이션 적용"]
+        DB03["DB-03<br/>ADMIN seed"]
+        DB04["DB-04<br/>데모 seed 데이터"]
+    end
+
+    subgraph BETrack["백엔드"]
+        BE01["BE-01<br/>Express 스캐폴드"]
+        BE02["BE-02<br/>가입·로그인"]
+        BE03["BE-03<br/>재발급·로그아웃·가드"]
+        BE04["BE-04<br/>미션 CRUD"]
+        BE05["BE-05<br/>미션 목록·상세"]
+        BE06["BE-06<br/>미션 참여"]
+        BE07["BE-07<br/>완료·스탬프 지급"]
+        BE08["BE-08<br/>스탬프 잔액·이력"]
+        BE09["BE-09<br/>리워드 CRUD"]
+        BE10["BE-10<br/>리워드 목록·교환판정"]
+        BE11["BE-11<br/>교환 트랜잭션·내역"]
+        BE12["BE-12<br/>내 정보·비밀번호"]
+        BE13["BE-13<br/>핵심 로직 테스트"]
+    end
+
+    subgraph FETrack["프론트엔드"]
+        FE01["FE-01<br/>React 스캐폴드"]
+        FE02["FE-02<br/>로그인·회원가입"]
+        FE03["FE-03<br/>레이아웃·가드"]
+        FE04["FE-04<br/>적립 안내·상세"]
+        FE05["FE-05<br/>적립 진행 현황"]
+        FE06["FE-06<br/>스탬프·이용 내역"]
+        FE07["FE-07<br/>쿠폰 목록·받기"]
+        FE08["FE-08<br/>쿠폰 사용 내역"]
+        FE09["FE-09<br/>스탬프 홈"]
+        FE10["FE-10<br/>마이페이지"]
+        FE11["FE-11<br/>적립 항목 관리"]
+        FE12["FE-12<br/>혜택 관리"]
+        FE13["FE-13<br/>반응형·에러·QA"]
+    end
+
+    DB01 --> DB02 --> DB03 --> DB04
+    DB01 --> BE01 --> BE02
+    DB02 --> BE02 --> BE03
+    BE03 --> BE04 --> BE05 --> BE06 --> BE07 --> BE08 --> BE10 --> BE11
+    BE03 --> BE09 --> BE10
+    BE03 --> BE12
+    BE07 --> BE13
+    BE11 --> BE13
+
+    FE01 --> FE02 --> FE03
+    BE02 --> FE02
+    BE03 --> FE03
+    FE03 --> FE04 --> FE05
+    BE05 --> FE04
+    BE06 --> FE04
+    BE07 --> FE05
+    FE03 --> FE06 --> FE07 --> FE08
+    BE08 --> FE06
+    BE10 --> FE07
+    BE11 --> FE07
+    BE11 --> FE08
+    FE06 --> FE09
+    FE07 --> FE09
+    FE03 --> FE10
+    BE12 --> FE10
+    FE03 --> FE11
+    BE04 --> FE11
+    BE07 --> FE11
+    FE03 --> FE12
+    BE09 --> FE12
+    FE09 --> FE13
+    FE10 --> FE13
+    FE11 --> FE13
+    FE12 --> FE13
+```
+
+**임계 경로(critical path)**: `DB-01 → DB-02 → BE-02 → BE-03 → BE-04 → BE-05 → BE-06 → BE-07 → BE-08 → BE-10 → BE-11 → FE-07 → FE-09 → FE-13` (14개). 이 체인이 지연되면 전체 일정이 그대로 밀리므로 우선 처리한다.
+
+**병렬 가능 지점**
+- `FE-01`(React 스캐폴드)은 선행 Task가 없어 DB/BE 작업과 무관하게 언제든 시작 가능하다.
+- `BE-09`(리워드 CRUD), `BE-12`(내 정보)는 `BE-03`만 끝나면 미션 계열(BE-04~08)과 병렬 진행 가능하다.
+- `FE-10`(마이페이지), `FE-11`(적립 항목 관리), `FE-12`(혜택 관리)는 서로 독립적이라 순서를 바꿔도 무방하다.
+- `DB-04`(데모 seed)는 임계 경로 밖이므로 화면 확인이 필요해지는 시점까지 미뤄도 된다.
 
 ---
 
@@ -177,7 +266,7 @@
 ### BE-04. 미션 CRUD (ADMIN) + 상태 자동계산·수동 종료
 
 **수행해야 할 작업**
-- `routes/mission.routes.js`: `POST /missions`, `PUT /missions/:missionId`, `PATCH /missions/:missionId/status`(수동 종료), `GET /missions`(관리자 목록 포함) — 쓰기 계열에 authGuard + roleGuard 적용.
+- `routes/mission.routes.js`: `POST /missions`, `PATCH /missions/:missionId`, `PATCH /missions/:missionId/status`(수동 종료), `GET /missions`(관리자 목록 포함) — 쓰기 계열에 authGuard + roleGuard 적용.
 - `services/mission.service.js`: 생성/수정 시 `startAt/endAt` 기준으로 status(PENDING/ACTIVE/ENDED) 자동 계산하는 순수 함수 `calcMissionStatus(startAt, endAt, now)`. 수동 종료는 기간과 무관하게 ENDED로 강제.
 - 입력 검증: title 필수, endAt > startAt, stampCount > 0, ingredientType 필수.
 
@@ -267,7 +356,7 @@
 ### BE-09. 리워드 CRUD + 활성/비활성 상태 관리 (ADMIN)
 
 **수행해야 할 작업**
-- `routes/reward.routes.js`: `POST /rewards`, `PUT /rewards/:rewardId`, `PATCH /rewards/:rewardId/status` — authGuard + roleGuard.
+- `routes/reward.routes.js`: `POST /rewards`, `PATCH /rewards/:rewardId`, `PATCH /rewards/:rewardId/status` — authGuard + roleGuard.
 - `services/reward.service.js`: 생성 시 status='ACTIVE' 기본, recipe는 `[{ingredientType, quantity}]` JSONB로 저장.
 - 입력 검증: name 필수, recipe 배열 1개 이상, 각 항목의 quantity > 0, ingredientType 비어있지 않음.
 
