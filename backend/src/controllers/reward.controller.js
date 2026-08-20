@@ -23,7 +23,9 @@ async function updateStatus(req, res, next) {
 
 async function list(req, res, next) {
   try {
-    const rewards = await rewardService.listRewardsForUser(req.user.userId);
+    const rewards = req.user.role === 'ADMIN'
+      ? await rewardService.listAllRewards()
+      : await rewardService.listRewardsForUser(req.user.userId);
     res.status(200).json(rewards);
   } catch (err) { next(err); }
 }

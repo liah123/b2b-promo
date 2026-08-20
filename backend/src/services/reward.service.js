@@ -89,4 +89,9 @@ async function listRewardsForUser(userId) {
   return rewards.map((r) => ({ ...r, canRedeem: canRedeem(balances, r.recipe) }));
 }
 
-module.exports = { createReward, updateReward, updateRewardStatus, canRedeem, listRewardsForUser };
+async function listAllRewards() {
+  const { rows } = await pool.query(`SELECT ${SELECT_COLUMNS} FROM rewards ORDER BY reward_id`);
+  return mapRows(rows);
+}
+
+module.exports = { createReward, updateReward, updateRewardStatus, canRedeem, listRewardsForUser, listAllRewards };

@@ -17,6 +17,19 @@ async function listMine(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function listByMission(req, res, next) {
+  try {
+    const missionId = Number(req.query.missionId);
+    if (!missionId) {
+      const err = new Error('missionId 쿼리 파라미터는 필수입니다');
+      err.status = 400;
+      throw err;
+    }
+    const participations = await participationService.listByMission(missionId);
+    res.status(200).json(participations);
+  } catch (err) { next(err); }
+}
+
 async function complete(req, res, next) {
   try {
     const participation = await participationService.completeParticipation(
@@ -37,4 +50,4 @@ async function confirm(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { join, listMine, complete, confirm };
+module.exports = { join, listMine, listByMission, complete, confirm };

@@ -44,6 +44,19 @@ async function listMyParticipations(userId) {
   return mapRows(rows);
 }
 
+async function listByMission(missionId) {
+  const { rows } = await pool.query(
+    `SELECT p.participation_id, p.mission_id, p.user_id, p.status, p.joined_at, p.completed_at,
+            u.name AS user_name, u.email AS user_email
+     FROM mission_participations p
+     JOIN users u ON u.user_id = p.user_id
+     WHERE p.mission_id = $1
+     ORDER BY p.participation_id DESC`,
+    [missionId]
+  );
+  return mapRows(rows);
+}
+
 async function completeParticipation(participationId, { userId, role }) {
   const client = await pool.connect();
   try {
@@ -101,4 +114,4 @@ async function completeParticipation(participationId, { userId, role }) {
   }
 }
 
-module.exports = { join, listMyParticipations, completeParticipation };
+module.exports = { join, listMyParticipations, listByMission, completeParticipation };

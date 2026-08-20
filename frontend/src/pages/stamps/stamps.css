@@ -1,0 +1,20 @@
+.stamp-balance-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+}
+.stamp-balance-card {
+  flex: 0 0 auto;
+  min-width: 120px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 16px;
+  text-align: center;
+}
+.stamp-balance-type { font-weight: 600; color: #2e332b; margin-bottom: 8px; }
+.stamp-balance-count { font-size: 20px; font-weight: 700; color: #2fae45; }
+.text-success { color: #2fae45; font-weight: 600; }
+.text-danger { color: #e5484d; font-weight: 600; }
