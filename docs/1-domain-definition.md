@@ -1,13 +1,9 @@
 # 도메인 정의서 — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
-버전: v1.6 (최종 수정일: 2026-08-13, 변경 이력은 11장 참고)
+버전: v1.1 (최종 수정일: 2026-08-13, 변경 이력은 11장 참고)
 
 ## 1. 개요
 Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래처 담당자를 대상으로, 관리자가 등록한 미션형 프로모션에 참여하고 완료 시 스탬프를 획득하여 리워드로 교환하는 웹 애플리케이션이다. 관리자는 미션과 리워드를 등록·관리하고, 거래처 담당자는 로그인 후 미션에 참여·완료하여 스탬프를 쌓고 이를 리워드로 교환한다. 교육용 바이브코딩 실습 MVP로, 핵심 흐름(미션 참여 → 미션 완료 → 스탬프 획득 → 리워드 교환)에 집중한다.
-
-> UI에 노출되는 화면 문구(적립 항목/쿠폰·혜택 등)는 내부 엔티티명(Mission/Reward 등)과 다르며, 매핑은 `7-wireframe.md` 0장을 따른다.
-
-스탬프에는 "재료" 컨셉이 부여된다 — 미션을 완료하면 해당 미션이 정한 **재료 종류**의 스탬프를 획득하고(예: 양파 스탬프, 당근 스탬프), 리워드는 여러 재료 스탬프를 조합해 완성하는 **요리**로 정의된다(예: "카레: 양파 2 + 당근 1 + 감자 1"). 스탬프의 저장·증감 메커니즘(StampTransaction 기반 이력 관리) 자체는 기존과 동일하며, 재료 종류라는 속성과 리워드의 교환 조건이 "총 개수 이상"에서 "재료별 필요 수량 충족"으로 구체화된 것이 이번 변경의 핵심이다.
 
 ## 2. 핵심 액터
 | 액터 | 설명 |
@@ -19,25 +15,25 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 | 엔티티 | 설명 | 주요 속성 |
 |---|---|---|
 | User | 거래처 담당자 또는 관리자 계정 | userId, email, password, name, role(CUSTOMER/ADMIN), createdAt |
-| Mission | 관리자가 등록하는 미션형 프로모션 | missionId, title, description, startAt, endAt, completionCondition, ingredientType(지급 재료 종류, 예: 양파), stampCount(지급 재료 스탬프 개수), status(예정(PENDING)/진행중(ACTIVE)/종료(ENDED)), createdBy |
+| Mission | 관리자가 등록하는 미션형 프로모션 | missionId, title, description, startAt, endAt, completionCondition, stampReward(지급 스탬프 개수), status(예정(PENDING)/진행중(ACTIVE)/종료(ENDED)), createdBy |
 | MissionParticipation | 사용자의 미션 참여 기록 (사용자-미션 조합당 1건) | participationId, userId, missionId, status(참여중(JOINED)/완료(COMPLETED)), joinedAt, completedAt |
-| StampTransaction | 재료 스탬프 증감 이력 | transactionId, userId, ingredientType(재료 종류), type(적립(EARN)/차감(USE)), amount(항상 양수), reason(예: 적립 확인/쿠폰 사용), relatedMissionId, relatedRedemptionId, createdAt |
-| Reward | 재료 스탬프 조합으로 교환하는 요리(리워드) | rewardId, name(요리명, 예: 카레), description, recipe(필요 재료 목록: [{ingredientType, quantity}]), status(활성(ACTIVE)/비활성(INACTIVE)) |
-| RewardRedemption | 사용자의 리워드(요리) 교환 내역 | redemptionId, userId, rewardId, redeemedAt (차감된 재료별 수량은 관련 StampTransaction 레코드들로 조회) |
+| StampTransaction | 스탬프 증감 이력 | transactionId, userId, type(적립(EARN)/차감(USE)), amount(항상 양수), reason(미션완료/리워드교환), relatedMissionId, relatedRedemptionId, createdAt |
+| Reward | 스탬프로 교환 가능한 리워드 | rewardId, name, description, requiredStamps, status(활성(ACTIVE)/비활성(INACTIVE)) |
+| RewardRedemption | 사용자의 리워드 교환 내역 | redemptionId, userId, rewardId, usedStamps, redeemedAt |
 
 ## 4. 엔티티 관계
 - User(거래처 담당자)는 여러 MissionParticipation을 가진다 (1:N)
 - Mission은 여러 MissionParticipation을 가진다 (1:N) — 단, 동일 (Mission, User) 조합은 하나의 MissionParticipation만 존재
-- MissionParticipation이 완료 상태가 되면 해당 User에게 Mission.ingredientType 재료의 StampTransaction(적립)이 1건 생성된다 (1:1)
-- User는 여러 StampTransaction을 가진다 (1:N) — 재료 종류별 보유 스탬프 잔액 = Σ(해당 ingredientType의 적립 amount) − Σ(해당 ingredientType의 차감 amount). 총 보유량은 재료 종류별 잔액의 합이 아니라 재료 종류별로 각각 관리된다.
+- MissionParticipation이 완료 상태가 되면 해당 User에게 StampTransaction(적립)이 1건 생성된다 (1:1)
+- User는 여러 StampTransaction을 가진다 (1:N) — 보유 스탬프 잔액 = Σ(적립 amount) − Σ(차감 amount)
 - User는 여러 RewardRedemption을 가진다 (1:N)
 - Reward는 여러 RewardRedemption에 참조된다 (1:N)
-- RewardRedemption이 발생하면 Reward.recipe에 명시된 재료 종류마다 StampTransaction(차감) 1건씩 생성된다 (1:N) — 예: 카레(양파2+당근1) 교환 시 양파 차감 1건 + 당근 차감 1건
+- RewardRedemption이 발생하면 해당 User에게 StampTransaction(차감)이 1건 생성된다 (1:1)
 
 ## 5. 유스케이스 (액터별)
 
 ### 공통
-- 회원가입 / 로그인 / 로그아웃
+- 회원가입 / 로그인
 - 로그인 후에만 미션, 스탬프, 리워드 등 기능 이용 가능 (인증 필수)
 - 마이페이지에서 내 정보 조회/수정, 비밀번호 변경
 
@@ -45,10 +41,10 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 - 진행 중/예정 미션 목록 및 상세 조회
 - 진행 중인 미션에 참여
 - 참여 중인 미션과 완료한 미션 구분 조회
-- (테스트용 완료 처리 또는 관리자 확인을 통해) 미션 완료 조건 충족 시 해당 미션의 재료 스탬프 획득
-- 재료 종류별 보유 스탬프 개수 및 획득·사용 이력 조회
-- 교환 가능한 요리(리워드) 목록 및 각 요리에 필요한 재료 조합(레시피) 조회
-- 레시피의 모든 재료를 필요 수량 이상 보유한 요리(리워드)를 교환
+- (테스트용 완료 처리 또는 관리자 확인을 통해) 미션 완료 조건 충족 시 스탬프 획득
+- 보유 스탬프 개수 및 스탬프 획득·사용 이력 조회
+- 교환 가능한 리워드 목록 및 필요 스탬프 개수 조회
+- 보유 스탬프가 충분한 리워드를 교환
 - 자신이 교환한 리워드 내역 조회
 
 ### 관리자
@@ -66,20 +62,10 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 
 ## 7. 비즈니스 규칙 및 예외케이스
 - 이메일은 유일해야 한다 — 동일 이메일로 중복 가입할 수 없다.
-- 회원가입으로는 CUSTOMER 계정만 생성되며, ADMIN 계정은 회원가입 화면 없이 DB seed 등으로 수동 생성한다.
 - 미션에는 반드시 참여 기간과 완료 조건이 존재하며, 참여 기간 내에만 신규 참여가 가능하다.
 - "미션 참여"는 (미션, 사용자) 조합당 유일하다 — 동일 사용자가 동일 미션에 중복 참여할 수 없다.
 - 미션 완료는 완료 조건을 충족한 경우에만 가능하다.
-- 동일한 (미션, 사용자) 조합에 대한 스탬프 지급은 1회만 허용된다 — 완료 요청이 중복되어도 중복 지급되지 않는다.
-- 이미 완료된 미션은 재완료 또는 재지급이 불가하다.
-- 미션 완료 시 지급되는 스탬프는 해당 미션에 정의된 재료 종류(ingredientType) 1가지와 수량(stampCount)으로 정해진다 — 미션마다 어떤 재료를 주는지가 고정되어 있다.
-- 스탬프는 재료 종류별로 개별 관리된다 — 미션 완료 시 해당 재료 종류의 스탬프가 증가하고, 리워드(요리) 교환 시 레시피에 명시된 재료 종류만큼 감소하며, 모든 증감 내역은 StampTransaction에 재료 종류와 함께 기록된다.
-- 리워드(요리)는 레시피(재료 종류 + 필요 수량의 목록)로 정의되며, 사용자가 레시피의 **모든 재료 종류를 각각 필요 수량 이상** 보유해야 교환할 수 있다 — 하나라도 부족한 재료가 있으면 교환할 수 없다(부분 재료 보유로는 교환 불가).
-- 리워드 교환이 완료되면 레시피에 명시된 재료 종류별 수량이 즉시 차감되고, 교환 내역(RewardRedemption)과 재료별 차감 이력(StampTransaction)이 함께 기록된다.
-- 종료된 미션에는 신규 참여가 불가하지만, 기존 참여·완료 이력은 계속 조회할 수 있다.
-- 비활성화된 리워드는 신규 교환이 불가하다.
-- 미션 완료 판정은 복잡한 외부 연동 없이 단순화된 방식(테스트용 완료 처리 또는 관리자 확인)으로 정의한다.
-- 핵심 흐름(미션 참여 → 미션 완료 → 스탬프 획득 → 리워드 교환) 중심의 범위로 한정하며, 과도한 확장은 하지 않는다.
+- @
 
 ## 8. 권한/역할
 | 역할 | 할 수 있는 것 |
@@ -116,8 +102,3 @@ Stamp Up은 식자재를 구매하는 외식업체·급식업체 등 B2B 거래�
 |---|---|---|
 | v1.0 | 2026-08-13 | 최초 작성 |
 | v1.1 | 2026-08-13 | 5기준 평가 개선안 반영 — status enum 영문 병기, Mission 상태 전이 우선순위 명시, StampTransaction.amount 부호/잔액 산식 명시, 이메일 유일성 규칙 추가, 변경 이력 섹션 추가 |
-| v1.2 | 2026-08-13 | "재료 스탬프 → 요리 리워드" 컨셉 반영 — Mission/StampTransaction에 ingredientType 추가, Reward.requiredStamps를 recipe(재료별 필요 수량 목록)로 변경, 관련 유스케이스·비즈니스 규칙 문구 수정 (엔티티·상태·스탬프 증감 메커니즘 자체는 변경 없음) |
-| v1.3 | 2026-08-13 | docs 정합성 검토 — PRD(3-PRD.md)의 로그아웃 기능과 맞춰 5장 공통 유스케이스에 "로그아웃" 추가 (2-usecase.md도 동기화) |
-| v1.4 | 2026-08-13 | 7장에 관리자 계정 생성 방식 규칙 추가 (회원가입은 CUSTOMER 전용, ADMIN은 DB seed로 수동 생성) |
-| v1.5 | 2026-08-13 | 1장에 UI 표시 문구와 내부 엔티티명이 다르다는 안내 추가 (매핑은 `7-wireframe.md` 0장 기준, 엔티티/상태값 자체는 변경 없음) |
-| v1.6 | 2026-08-13 | docs 정합성 검토 — 3장 StampTransaction.reason 예시를 4-user-scenari.md/7-wireframe.md/9-plan.md가 이미 일관되게 쓰는 값("적립 확인"/"쿠폰 사용")으로 갱신 (게임형 문구 잔재였던 "미션완료/리워드교환" 예시 정정, 필드/타입 자체는 변경 없음) |

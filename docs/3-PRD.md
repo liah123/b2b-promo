@@ -1,7 +1,7 @@
 # PRD — Stamp Up (식자재 유통 B2B 미션형 프로모션·스탬프 리워드)
 
-버전: v1.5 (작성일: 2026-08-13, v1.4→v1.5: docs 정합성 검토 — 근거 문서 버전 갱신, 5.2절 인덱스 목록에 reward_redemptions(user_id) 누락분 추가)
-근거 문서: `docs/1-domain-definition.md` (v1.6)
+버전: v1.3 (작성일: 2026-08-13, v1.2→v1.3: 게임형 미션/리워드 화면 문구를 일반 스탬프 적립/쿠폰 서비스 톤으로 갱신, 스탬프 홈 화면 추가)
+근거 문서: `docs/1-domain-definition.md` (v1.4)
 
 ---
 
@@ -29,13 +29,7 @@
 
 ## 2. 범위
 
-### 2.1 In-scope (도메인 정의서 MVP 포함 범위 그대로)
-- 회원가입/로그인 (이메일 유일성)
-- 미션 등록·조회·참여·완료
-- 스탬프(재료별) 지급 및 이력 조회
-- 리워드(요리) 등록·조회·교환
-- 마이페이지 (내 정보 조회/수정, 비밀번호 변경)
-
+### docs 디렉토리의 몬서들을 비교 분석하여 정합성 여부를 검토하고 불일치하는 부분이 있다면 수정해줘.
 ### 2.2 Out-of-scope
 - 실제 주문/결제/정산
 - 실제 주문 데이터와 미션 자동 연동
@@ -81,13 +75,7 @@
 | 마이페이지 | 내 정보 조회/수정, 비밀번호 변경 |
 
 ### 3.3 관리자 (ADMIN)
-| 화면 | 기능 |
-|---|---|
-| 적립 항목 관리 목록 | 등록된 적립 항목 목록 조회 (상태 포함) |
-| 적립 항목 등록/수정 | 항목명, 설명, 참여기간(시작/종료), 적립조건, 지급 스탬프 종류(ingredientType), 지급 수량(stampCount) 입력 |
-| 적립 항목 상태 관리 | 예정/진행중/종료 수동 전환 (자동 계산이 기본, 수동 종료는 예외 처리) |
-| 적립 확인 처리 | 특정 사용자의 참여 건에 대해 확인 처리 (테스트용 방식과 동일 로직) |
-| 혜택 관리 목록 | 등록된 쿠폰/혜택 목록 조회 |
+|/ |
 | 혜택 등록/수정 | 혜택명, 설명, 필요 스탬프([{ingredientType, quantity}]) 입력/수정 |
 | 혜택 상태 관리 | 활성/비활성 전환 |
 | 마이페이지 | 내 정보 조회/수정, 비밀번호 변경 (공통과 동일) |
@@ -120,7 +108,7 @@
 ### 5.2 레이어 구조 (개략)
 ```
 [React 19 SPA]
-  - pages: Login/Signup, StampHome(첫 화면), MissionList, MissionDetail, MyMissions,
+  - pages: Login/Signup, MissionList, MissionDetail, MyMissions,
            Stamps, RewardList, MyRedemptions, MyPage,
            Admin/MissionManage, Admin/RewardManage
   - Zustand: 로그인 사용자 정보, access token(메모리 보관)
@@ -140,8 +128,7 @@
   - tables: users, missions, mission_participations, stamp_transactions,
             rewards, reward_redemptions, refresh_tokens
   - 주요 인덱스: users.email(unique), mission_participations(mission_id,user_id) unique,
-                stamp_transactions(user_id, ingredient_type), reward_redemptions(user_id),
-                refresh_tokens(user_id), refresh_tokens(token) unique
+                stamp_transactions(user_id, ingredient_type), refresh_tokens(user_id), refresh_tokens(token) unique
 ```
 - refresh_tokens: 로그아웃/재발급 시 폐기(revoke) 처리를 위해 DB에 저장 (id, user_id, token, expires_at, revoked_at). 회전(rotation) 정책은 MVP 범위 밖 — 단순 폐기만 지원.
   - ponytail: refresh token을 DB 테이블 1개로만 관리 (Redis blacklist 등 별도 저장소 없음), 트래픽 늘면 Redis 캐시 레이어 도입 고려

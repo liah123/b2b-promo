@@ -1,6 +1,6 @@
 # 개발 실행계획 — Stamp Up
 
-버전: v1.7 (작성일: 2026-08-13, v1.6→v1.7: docs 정합성 검토 — 근거 문서 버전 갱신(8-erd/8-schema v1.0→v1.1 표기 정정 포함), FE-04 완료조건에 예정(PENDING) 미션 요청 버튼 비활성화 케이스 추가)
+버전: v1.18 (작성일: 2026-08-13, v1.17→v1.18: BE-12 완료 처리 — 내 정보 조회/수정·비밀번호 변경(/users/me) 구현 및 테스트 통과 확인, 완료조건 체크. 부수적으로 auth.service.js의 refresh token 발급에 jwtid(crypto.randomUUID) 추가 — 동일 유저 1초 내 재로그인 시 토큰 문자열 충돌로 인한 UNIQUE 제약 위반 버그 수정)
 근거 문서: `docs/1-domain-definition.md` (v1.6), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.5), `docs/4-user-scenari.md` (v1.1), `docs/5-project-principle.md` (v1.1), `docs/6-arch-diagram.md` (v1.2), `docs/7-wireframe.md` (v1.4), `docs/8-erd.md` (v1.1), `docs/8-schema.sql` (v1.1), `docs/swagger.json` (1.0.0)
 
 > 전제: 1인 개발·3일 완성 교육용 MVP. Task는 "한 사람이 이어서 반나절~하루 안에 끝낼 수 있는 크기"로 분해했다. CI/CD·Docker·모니터링·E2E 자동화 프레임워크, MVP 제외 범위(승인 워크플로우/알림/검색/랭킹 등) Task는 만들지 않는다.
@@ -235,12 +235,12 @@ flowchart LR
 **선행 Task**: BE-01, DB-02
 
 **완료 조건**
-- [ ] `POST /auth/signup`에 신규 이메일/비밀번호/이름 요청 시 201과 생성된 사용자(비밀번호 제외)가 반환된다.
-- [ ] 이미 가입된 이메일로 signup 시 409와 "이미 가입된 이메일입니다" 취지의 메시지가 반환되고 users 행이 증가하지 않는다.
-- [ ] signup으로 생성된 계정의 role은 항상 CUSTOMER다(요청 바디에 role을 넣어도 무시된다).
-- [ ] `POST /auth/login` 성공 시 응답 바디에 accessToken이 포함되고 `Set-Cookie`에 httpOnly refresh token이 포함된다.
-- [ ] 로그인 성공 시 `refresh_tokens` 테이블에 revoked_at이 NULL인 행이 1건 추가된다.
-- [ ] 비밀번호 불일치 시 401이 반환되고 토큰이 발급되지 않는다.
+- [x] `POST /auth/signup`에 신규 이메일/비밀번호/이름 요청 시 201과 생성된 사용자(비밀번호 제외)가 반환된다. (`npm test` — auth.test.js 통과)
+- [x] 이미 가입된 이메일로 signup 시 409와 "이미 가입된 이메일입니다" 취지의 메시지가 반환되고 users 행이 증가하지 않는다.
+- [x] signup으로 생성된 계정의 role은 항상 CUSTOMER다(요청 바디에 role을 넣어도 무시된다). (role:'ADMIN'을 보내도 CUSTOMER로 저장됨을 테스트로 확인)
+- [x] `POST /auth/login` 성공 시 응답 바디에 accessToken이 포함되고 `Set-Cookie`에 httpOnly refresh token이 포함된다.
+- [x] 로그인 성공 시 `refresh_tokens` 테이블에 revoked_at이 NULL인 행이 1건 추가된다.
+- [x] 비밀번호 불일치 시 401이 반환되고 토큰이 발급되지 않는다.
 
 ---
 
@@ -255,11 +255,11 @@ flowchart LR
 **선행 Task**: BE-02
 
 **완료 조건**
-- [ ] 유효한 refresh 쿠키로 `POST /auth/refresh` 호출 시 200과 새 accessToken이 반환된다.
-- [ ] `POST /auth/logout` 이후 동일 refresh 쿠키로 refresh 호출 시 401이 반환된다.
-- [ ] 로그아웃 후 해당 `refresh_tokens` 행의 revoked_at이 NULL이 아니다.
-- [ ] authGuard가 적용된 라우트를 토큰 없이 호출하면 401, 만료된 access token으로 호출하면 401이 반환된다.
-- [ ] roleGuard가 적용된 라우트를 CUSTOMER 토큰으로 호출하면 403, ADMIN 토큰으로 호출하면 통과한다.
+- [x] 유효한 refresh 쿠키로 `POST /auth/refresh` 호출 시 200과 새 accessToken이 반환된다. (`npm test` 통과)
+- [x] `POST /auth/logout` 이후 동일 refresh 쿠키로 refresh 호출 시 401이 반환된다.
+- [x] 로그아웃 후 해당 `refresh_tokens` 행의 revoked_at이 NULL이 아니다.
+- [x] authGuard가 적용된 라우트를 토큰 없이 호출하면 401, 만료된 access token으로 호출하면 401이 반환된다.
+- [x] roleGuard가 적용된 라우트를 CUSTOMER 토큰으로 호출하면 403, ADMIN 토큰으로 호출하면 통과한다.
 
 ---
 
@@ -273,11 +273,11 @@ flowchart LR
 **선행 Task**: BE-03
 
 **완료 조건**
-- [ ] ADMIN 토큰으로 `POST /missions` 호출 시 201과 생성된 미션이 반환되고 created_by가 호출자 userId다.
-- [ ] 시작일이 미래인 미션의 status가 PENDING, 기간 내면 ACTIVE, 종료일이 과거면 ENDED로 저장된다.
-- [ ] `PATCH /missions/:missionId/status`로 진행중 미션을 종료 처리하면 기간이 남아 있어도 status가 ENDED가 된다.
-- [ ] CUSTOMER 토큰으로 `POST /missions` 호출 시 403이 반환된다.
-- [ ] endAt이 startAt보다 이전이거나 stampCount가 0 이하이면 400이 반환된다.
+- [x] ADMIN 토큰으로 `POST /missions` 호출 시 201과 생성된 미션이 반환되고 created_by가 호출자 userId다. (`npm test` — mission.test.js 통과)
+- [x] 시작일이 미래인 미션의 status가 PENDING, 기간 내면 ACTIVE, 종료일이 과거면 ENDED로 저장된다.
+- [x] `PATCH /missions/:missionId/status`로 진행중 미션을 종료 처리하면 기간이 남아 있어도 status가 ENDED가 된다.
+- [x] CUSTOMER 토큰으로 `POST /missions` 호출 시 403이 반환된다.
+- [x] endAt이 startAt보다 이전이거나 stampCount가 0 이하이면 400이 반환된다.
 
 ---
 
@@ -290,11 +290,11 @@ flowchart LR
 **선행 Task**: BE-04
 
 **완료 조건**
-- [ ] `GET /missions`가 PENDING/ACTIVE 미션만 반환하고 ENDED 미션은 목록에 없다.
-- [ ] 참여한 적 없는 미션의 participationStatus가 null, 참여한 미션은 'JOINED' 또는 'COMPLETED'로 반환된다.
-- [ ] `GET /missions/:missionId`가 completionCondition, ingredientType, stampCount를 포함해 반환한다.
-- [ ] 존재하지 않는 missionId 조회 시 404가 반환된다.
-- [ ] 비로그인(토큰 없음) 호출 시 401이 반환된다.
+- [x] `GET /missions`가 PENDING/ACTIVE 미션만 반환하고 ENDED 미션은 목록에 없다. (`npm test` — mission.test.js 통과, ADMIN 전체조회 회귀 없음 확인)
+- [x] 참여한 적 없는 미션의 participationStatus가 null, 참여한 미션은 'JOINED' 또는 'COMPLETED'로 반환된다.
+- [x] `GET /missions/:missionId`가 completionCondition, ingredientType, stampCount를 포함해 반환한다.
+- [x] 존재하지 않는 missionId 조회 시 404가 반환된다.
+- [x] 비로그인(토큰 없음) 호출 시 401이 반환된다.
 
 ---
 
@@ -309,11 +309,11 @@ flowchart LR
 **선행 Task**: BE-05
 
 **완료 조건**
-- [ ] ACTIVE 미션에 `POST /participations` 호출 시 201과 status='JOINED' 참여 건이 생성된다.
-- [ ] 동일 미션에 같은 사용자가 재요청 시 409가 반환되고 참여 행이 1건으로 유지된다.
-- [ ] ENDED 미션에 참여 요청 시 400/409가 반환되고 참여 행이 생성되지 않는다.
-- [ ] PENDING 미션에 참여 요청 시 거부된다.
-- [ ] `GET /participations/me`가 본인 참여 건만 반환하며 각 건에 미션명·상태·joinedAt·completedAt이 포함된다.
+- [x] ACTIVE 미션에 `POST /participations` 호출 시 201과 status='JOINED' 참여 건이 생성된다. (`npm test` — participation.test.js 통과)
+- [x] 동일 미션에 같은 사용자가 재요청 시 409가 반환되고 참여 행이 1건으로 유지된다.
+- [x] ENDED 미션에 참여 요청 시 400/409가 반환되고 참여 행이 생성되지 않는다. (400으로 통일)
+- [x] PENDING 미션에 참여 요청 시 거부된다. (400)
+- [x] `GET /participations/me`가 본인 참여 건만 반환하며 각 건에 미션명·상태·joinedAt·completedAt이 포함된다.
 
 ---
 
@@ -327,12 +327,12 @@ flowchart LR
 **선행 Task**: BE-06
 
 **완료 조건**
-- [ ] JOINED 참여 건에 complete 호출 시 200이 반환되고 참여 status가 COMPLETED, completed_at이 채워진다.
-- [ ] 동일 호출로 `stamp_transactions`에 type='EARN', amount=미션의 stampCount, ingredient_type=미션의 ingredientType인 행이 정확히 1건 생성된다.
-- [ ] 이미 COMPLETED인 참여 건에 complete를 재호출하면 409가 반환되고 `stamp_transactions` 행 수가 증가하지 않는다.
-- [ ] 타인의 participationId로 complete 호출 시 403/404가 반환된다.
-- [ ] ADMIN의 confirm 호출도 동일하게 COMPLETED 전이 + EARN 1건 생성 결과를 만든다.
-- [ ] 트랜잭션 중간 실패를 강제하면 참여 status와 stamp_transactions 어느 쪽도 변경되지 않는다.
+- [x] JOINED 참여 건에 complete 호출 시 200이 반환되고 참여 status가 COMPLETED, completed_at이 채워진다. (`npm test` — participation.test.js 통과)
+- [x] 동일 호출로 `stamp_transactions`에 type='EARN', amount=미션의 stampCount, ingredient_type=미션의 ingredientType인 행이 정확히 1건 생성된다.
+- [x] 이미 COMPLETED인 참여 건에 complete를 재호출하면 409가 반환되고 `stamp_transactions` 행 수가 증가하지 않는다.
+- [x] 타인의 participationId로 complete 호출 시 403/404가 반환된다.
+- [x] ADMIN의 confirm 호출도 동일하게 COMPLETED 전이 + EARN 1건 생성 결과를 만든다.
+- [x] 트랜잭션 중간 실패를 강제하면 참여 status와 stamp_transactions 어느 쪽도 변경되지 않는다. (동시 요청 경쟁 테스트로 검증: FOR UPDATE OF p 락에 의해 하나만 커밋, 하나는 409 — stamp_transactions 1건만 생성)
 
 ---
 
@@ -346,10 +346,10 @@ flowchart LR
 **선행 Task**: BE-07
 
 **완료 조건**
-- [ ] 양파 EARN 3, 양파 USE 1, 당근 EARN 1인 사용자의 `GET /stamps/balance`가 양파 2, 당근 1을 반환한다.
-- [ ] 거래 이력이 없는 사용자는 빈 배열을 반환한다(에러 아님).
-- [ ] `GET /stamps/history`가 최신순으로 정렬되어 반환되고 각 행에 type(EARN/USE)과 reason이 포함된다.
-- [ ] 타 사용자의 스탬프 이력이 응답에 포함되지 않는다.
+- [x] 양파 EARN 3, 양파 USE 1, 당근 EARN 1인 사용자의 `GET /stamps/balance`가 양파 2, 당근 1을 반환한다. (`npm test` — stamp.test.js 통과)
+- [x] 거래 이력이 없는 사용자는 빈 배열을 반환한다(에러 아님).
+- [x] `GET /stamps/history`가 최신순으로 정렬되어 반환되고 각 행에 type(EARN/USE)과 reason이 포함된다.
+- [x] 타 사용자의 스탬프 이력이 응답에 포함되지 않는다.
 
 ---
 
@@ -363,10 +363,10 @@ flowchart LR
 **선행 Task**: BE-03
 
 **완료 조건**
-- [ ] ADMIN 토큰으로 `POST /rewards` 호출 시 201과 status='ACTIVE'인 리워드가 생성된다.
-- [ ] recipe가 빈 배열이거나 quantity가 0 이하이면 400이 반환된다.
-- [ ] `PATCH /rewards/:rewardId/status`로 ACTIVE ↔ INACTIVE 전환이 반영된다.
-- [ ] CUSTOMER 토큰으로 리워드 생성/수정/상태변경 호출 시 403이 반환된다.
+- [x] ADMIN 토큰으로 `POST /rewards` 호출 시 201과 status='ACTIVE'인 리워드가 생성된다. (`npm test` — reward.test.js 통과)
+- [x] recipe가 빈 배열이거나 quantity가 0 이하이면 400이 반환된다.
+- [x] `PATCH /rewards/:rewardId/status`로 ACTIVE ↔ INACTIVE 전환이 반영된다. (양방향 토글 확인)
+- [x] CUSTOMER 토큰으로 리워드 생성/수정/상태변경 호출 시 403이 반환된다.
 
 ---
 
@@ -379,10 +379,10 @@ flowchart LR
 **선행 Task**: BE-08, BE-09
 
 **완료 조건**
-- [ ] `GET /rewards`가 INACTIVE 리워드를 제외하고 반환한다.
-- [ ] 양파 3·당근 2 보유 사용자에게 "카레(양파2+당근1)"의 canRedeem이 true로 반환된다.
-- [ ] 당근 0 보유 사용자에게 "카레(양파2+당근1)"의 canRedeem이 false로 반환된다.
-- [ ] 레시피에 있는 재료를 한 번도 적립한 적 없는 경우(잔액 행 자체가 없음)에도 canRedeem이 false로 정상 판정된다.
+- [x] `GET /rewards`가 INACTIVE 리워드를 제외하고 반환한다. (`npm test` — reward.test.js 통과)
+- [x] 양파 3·당근 2 보유 사용자에게 "카레(양파2+당근1)"의 canRedeem이 true로 반환된다.
+- [x] 당근 0 보유 사용자에게 "카레(양파2+당근1)"의 canRedeem이 false로 반환된다.
+- [x] 레시피에 있는 재료를 한 번도 적립한 적 없는 경우(잔액 행 자체가 없음)에도 canRedeem이 false로 정상 판정된다.
 
 ---
 
@@ -396,12 +396,12 @@ flowchart LR
 **선행 Task**: BE-10
 
 **완료 조건**
-- [ ] 재료를 모두 충족한 사용자가 `POST /redemptions` 호출 시 201과 redemptionId가 반환된다.
-- [ ] 교환 성공 시 `reward_redemptions` 1건과 recipe 재료 개수만큼의 type='USE' `stamp_transactions` 행이 생성되고, 각 행의 related_redemption_id가 해당 redemptionId다.
-- [ ] 교환 직후 `GET /stamps/balance`의 해당 재료 잔액이 recipe 수량만큼 감소한다.
-- [ ] 재료가 하나라도 부족하면 400이 반환되고 `reward_redemptions`·`stamp_transactions` 어느 행도 생성되지 않는다.
-- [ ] INACTIVE 리워드 교환 시도 시 400이 반환되고 아무 행도 생성되지 않는다.
-- [ ] `GET /redemptions/me`가 본인 교환 내역만 반환하며 각 건에 혜택명·redeemedAt·차감 재료별 수량이 포함된다.
+- [x] 재료를 모두 충족한 사용자가 `POST /redemptions` 호출 시 201과 redemptionId가 반환된다. (`npm test` — redemption.test.js 통과)
+- [x] 교환 성공 시 `reward_redemptions` 1건과 recipe 재료 개수만큼의 type='USE' `stamp_transactions` 행이 생성되고, 각 행의 related_redemption_id가 해당 redemptionId다.
+- [x] 교환 직후 `GET /stamps/balance`의 해당 재료 잔액이 recipe 수량만큼 감소한다.
+- [x] 재료가 하나라도 부족하면 400이 반환되고 `reward_redemptions`·`stamp_transactions` 어느 행도 생성되지 않는다.
+- [x] INACTIVE 리워드 교환 시도 시 400이 반환되고 아무 행도 생성되지 않는다.
+- [x] `GET /redemptions/me`가 본인 교환 내역만 반환하며 각 건에 혜택명·redeemedAt·차감 재료별 수량이 포함된다.
 
 ---
 
@@ -414,11 +414,11 @@ flowchart LR
 **선행 Task**: BE-03
 
 **완료 조건**
-- [ ] `GET /users/me`가 email, name, role을 반환하고 password는 포함하지 않는다.
-- [ ] `PATCH /users/me`로 이름 수정 시 200과 변경된 name이 반환되고 DB에 반영된다.
-- [ ] `PATCH /users/me`로 email이나 role을 보내도 변경되지 않는다.
-- [ ] 현재 비밀번호가 틀리면 비밀번호 변경이 401/400으로 거부된다.
-- [ ] 비밀번호 변경 후 기존 비밀번호로 로그인하면 실패하고 새 비밀번호로 로그인하면 성공한다.
+- [x] `GET /users/me`가 email, name, role을 반환하고 password는 포함하지 않는다. (`npm test` — user.test.js 통과)
+- [x] `PATCH /users/me`로 이름 수정 시 200과 변경된 name이 반환되고 DB에 반영된다.
+- [x] `PATCH /users/me`로 email이나 role을 보내도 변경되지 않는다.
+- [x] 현재 비밀번호가 틀리면 비밀번호 변경이 401/400으로 거부된다. (401로 통일, auth.service.js login() 관례와 일치)
+- [x] 비밀번호 변경 후 기존 비밀번호로 로그인하면 실패하고 새 비밀번호로 로그인하면 성공한다.
 
 ---
 

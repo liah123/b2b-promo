@@ -5,10 +5,9 @@
     "version": "1.0.0",
     "description": "식자재 유통 B2B 미션형 프로모션·재료 스탬프·요리 리워드 교환 API"
   },
-  "servers": [
-    { "url": "/api" }
-  ],
+  "servers": [{ "url": "/" }],
   "tags": [
+    { "name": "system", "description": "서버 상태 확인" },
     { "name": "auth", "description": "회원가입/로그인/토큰 재발급/로그아웃" },
     { "name": "missions", "description": "미션(적립 항목) 조회 및 관리" },
     { "name": "participations", "description": "미션 참여 및 완료 처리" },
@@ -17,10 +16,29 @@
     { "name": "redemptions", "description": "리워드 교환 및 교환 내역" },
     { "name": "users", "description": "내 정보 조회/수정" }
   ],
-  "security": [
-    { "bearerAuth": [] }
-  ],
+  "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/health": {
+      "get": {
+        "tags": ["system"],
+        "summary": "서버 상태 확인",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "정상 동작 중",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "status": { "type": "string", "example": "ok" } },
+                  "required": ["status"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/signup": {
       "post": {
         "tags": ["auth"],
@@ -100,7 +118,8 @@
       "post": {
         "tags": ["auth"],
         "summary": "로그아웃",
-        "description": "서버에 저장된 refresh token을 폐기(revoke)하고 클라이언트 토큰을 무효화한다.",
+        "description": "서버에 저장된 refresh token을 폐기(revoke)하고 클라이언트 토큰을 무효화한다. authGuard가 적용되지 않으므로 access token 없이 refresh token 쿠키만으로 호출한다.",
+        "security": [],
         "responses": {
           "204": { "description": "로그아웃 성공 (본문 없음)" },
           "401": { "$ref": "#/components/responses/Unauthorized" }
@@ -111,10 +130,7 @@
       "get": {
         "tags": ["missions"],
         "summary": "미션(적립 항목) 목록 조회",
-        "parameters": [
-          { "$ref": "#/components/parameters/PageParam" },
-          { "$ref": "#/components/parameters/LimitParam" }
-        ],
+        "description": "ADMIN 토큰이면 모든 상태(PENDING/ACTIVE/ENDED)의 미션을 반환한다(participationStatus 필드 없음). CUSTOMER 토큰이면 PENDING/ACTIVE 미션만 반환하며, 각 항목에 호출자 본인의 참여 상태(participationStatus)가 포함된다. 페이지네이션은 지원하지 않는다.",
         "responses": {
           "200": {
             "description": "미션 목록",
@@ -160,9 +176,7 @@
       "get": {
         "tags": ["missions"],
         "summary": "미션 상세 조회",
-        "parameters": [
-          { "$ref": "#/components/parameters/MissionIdParam" }
-        ],
+        "parameters": [{ "$ref": "#/components/parameters/MissionIdParam" }],
         "responses": {
           "200": {
             "description": "미션 상세",
@@ -179,9 +193,7 @@
       "patch": {
         "tags": ["missions"],
         "summary": "미션 수정 (ADMIN 전용)",
-        "parameters": [
-          { "$ref": "#/components/parameters/MissionIdParam" }
-        ],
+        "parameters": [{ "$ref": "#/components/parameters/MissionIdParam" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -211,14 +223,22 @@
         "tags": ["missions"],
         "summary": "미션 상태 수동 변경 (ADMIN 전용, 수동 종료 등 예외 처리)",
         "description": "미션 상태는 참여 기간(startAt/endAt) 기준 자동 계산이 원칙이나, 관리자가 기간 중이라도 강제로 종료 등으로 전이시킬 수 있다.",
-        "parameters": [
-          { "$ref": "#/components/parameters/MissionIdParam" }
-        ],
+        "parameters": [{ "$ref": "#/components/parameters/MissionIdParam" }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/MissionStatusUpdateRequest" }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["ENDED"],
+                    "description": "수동 종료 전용 — 'ENDED' 외의 값은 400으로 거부된다."
+                  }
+                },
+                "required": ["status"]
+              }
             }
           }
         },
@@ -242,7 +262,7 @@
       "post": {
         "tags": ["participations"],
         "summary": "미션 참여",
-        "description": "로그인한 사용자가 요청 본문의 missionId 미션에 참여한다. 이미 참여중이거나 완료한 미션에 재참여하는 경우, 또는 아직 시작하지 않은(PENDING) 미션이나 종료된(ENDED) 미션에 참여하는 경우 실패한다.",
+        "description": "로그인한 사용자가 요청 본문의 missionId 미션에 참여한다. missionId가 없거나 미션이 ACTIVE 상태가 아니면(PENDING/ENDED) 400, 존재하지 않는 미션이면 404, 이미 참여중이거나 완료한 미션에 재참여하면 409가 반환된다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -266,10 +286,11 @@
               }
             }
           },
+          "400": { "$ref": "#/components/responses/BadRequest" },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "409": {
-            "description": "이미 참여중/완료한 미션이거나 아직 시작하지 않은(PENDING) 미션 또는 종료된(ENDED) 미션이라 참여할 수 없음",
+            "description": "이미 참여중이거나 완료한 미션에 대한 중복 참여",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -283,17 +304,7 @@
       "get": {
         "tags": ["participations"],
         "summary": "내 미션 참여 목록 조회 (참여중/완료 구분)",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "description": "참여 상태로 필터링",
-            "schema": { "$ref": "#/components/schemas/ParticipationStatus" }
-          },
-          { "$ref": "#/components/parameters/PageParam" },
-          { "$ref": "#/components/parameters/LimitParam" }
-        ],
+        "description": "본인의 전체 참여 목록을 반환한다(상태 필터·페이지네이션 미지원).",
         "responses": {
           "200": {
             "description": "내 참여 목록",
@@ -314,13 +325,11 @@
       "post": {
         "tags": ["participations"],
         "summary": "미션 완료 처리 (고객 셀프 테스트용 확인 요청)",
-        "description": "완료 조건 충족 처리를 하고 해당 미션의 재료 스탬프를 지급한다. /confirm과 동일한 서비스 로직(completeParticipation)을 호출하며, 이미 완료된 참여 건에 대한 재요청은 스탬프를 중복 지급하지 않고 idempotent하게 처리하거나 409로 거절한다.",
-        "parameters": [
-          { "$ref": "#/components/parameters/ParticipationIdParam" }
-        ],
+        "description": "완료 조건 충족 처리를 하고 해당 미션의 재료 스탬프를 지급한다. /confirm과 동일한 서비스 로직(completeParticipation)을 호출한다. 본인 소유가 아닌 참여 건이면 403, 이미 완료 처리된 참여 건에 재요청하면 항상 409로 거절되며 스탬프는 중복 지급되지 않는다.",
+        "parameters": [{ "$ref": "#/components/parameters/ParticipationIdParam" }],
         "responses": {
           "200": {
-            "description": "완료 처리 성공 (이미 완료 상태였던 경우 idempotent 응답 포함)",
+            "description": "완료 처리 성공",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MissionParticipation" }
@@ -328,6 +337,7 @@
             }
           },
           "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "409": {
             "description": "이미 완료 처리되어 재지급이 불가능한 경우",
@@ -344,13 +354,11 @@
       "post": {
         "tags": ["participations"],
         "summary": "미션 완료 확인 처리 (ADMIN 전용)",
-        "description": "관리자가 특정 참여 건을 완료 확인 처리한다. /complete와 동일한 서비스 로직(completeParticipation)을 호출하는 ADMIN 전용 진입점이며, 로직은 중복 구현하지 않는다.",
-        "parameters": [
-          { "$ref": "#/components/parameters/ParticipationIdParam" }
-        ],
+        "description": "관리자가 특정 참여 건을 완료 확인 처리한다. /complete와 동일한 서비스 로직(completeParticipation)을 호출하는 ADMIN 전용 진입점이며, 로직은 중복 구현하지 않는다. 이미 완료 처리된 참여 건에 재요청하면 항상 409로 거절된다.",
+        "parameters": [{ "$ref": "#/components/parameters/ParticipationIdParam" }],
         "responses": {
           "200": {
-            "description": "확인 처리 성공 (이미 완료 상태였던 경우 idempotent 응답 포함)",
+            "description": "확인 처리 성공",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MissionParticipation" }
@@ -395,10 +403,7 @@
       "get": {
         "tags": ["stamps"],
         "summary": "내 스탬프 적립/차감 이력 조회",
-        "parameters": [
-          { "$ref": "#/components/parameters/PageParam" },
-          { "$ref": "#/components/parameters/LimitParam" }
-        ],
+        "description": "created_at 내림차순(최신순)으로 전체 이력을 반환한다(페이지네이션 미지원).",
         "responses": {
           "200": {
             "description": "스탬프 이력 목록",
@@ -419,10 +424,7 @@
       "get": {
         "tags": ["rewards"],
         "summary": "리워드(요리) 목록 조회",
-        "parameters": [
-          { "$ref": "#/components/parameters/PageParam" },
-          { "$ref": "#/components/parameters/LimitParam" }
-        ],
+        "description": "ACTIVE 상태 리워드만 반환하며(ADMIN/CUSTOMER 공통), 각 항목에 호출자 본인의 재료 스탬프 보유량 기준 교환 가능 여부(canRedeem)가 포함된다. 페이지네이션은 지원하지 않는다.",
         "responses": {
           "200": {
             "description": "리워드 목록",
@@ -468,9 +470,7 @@
       "patch": {
         "tags": ["rewards"],
         "summary": "리워드 수정 (ADMIN 전용)",
-        "parameters": [
-          { "$ref": "#/components/parameters/RewardIdParam" }
-        ],
+        "parameters": [{ "$ref": "#/components/parameters/RewardIdParam" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -499,9 +499,7 @@
       "patch": {
         "tags": ["rewards"],
         "summary": "리워드 활성/비활성 상태 변경 (ADMIN 전용)",
-        "parameters": [
-          { "$ref": "#/components/parameters/RewardIdParam" }
-        ],
+        "parameters": [{ "$ref": "#/components/parameters/RewardIdParam" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -530,7 +528,7 @@
       "post": {
         "tags": ["redemptions"],
         "summary": "리워드(요리) 교환",
-        "description": "요청 본문의 rewardId 리워드를 교환한다. 레시피에 명시된 모든 재료 종류를 필요 수량 이상 보유한 경우에만 교환할 수 있다. 재료 스탬프가 부족하거나 비활성 리워드인 경우 교환할 수 없다.",
+        "description": "요청 본문의 rewardId 리워드를 교환한다. 레시피에 명시된 모든 재료 종류를 필요 수량 이상 보유한 경우에만 교환할 수 있다. 재료 스탬프가 부족하거나 비활성 리워드인 경우 400으로 거절되며 어떤 행도 생성되지 않는다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -563,15 +561,7 @@
             }
           },
           "401": { "$ref": "#/components/responses/Unauthorized" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": {
-            "description": "필요 재료 스탬프 부족 또는 비활성 리워드로 인한 교환 불가",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
     },
@@ -579,10 +569,7 @@
       "get": {
         "tags": ["redemptions"],
         "summary": "내 리워드 교환 내역 조회",
-        "parameters": [
-          { "$ref": "#/components/parameters/PageParam" },
-          { "$ref": "#/components/parameters/LimitParam" }
-        ],
+        "description": "redeemed_at 내림차순(최신순)으로 본인의 전체 교환 내역을 반환한다(페이지네이션 미지원). 각 건에 차감된 재료별 수량(usedIngredients)이 포함된다.",
         "responses": {
           "200": {
             "description": "내 교환 내역 목록",
@@ -687,18 +674,6 @@
         "in": "path",
         "required": true,
         "schema": { "type": "integer", "format": "int64" }
-      },
-      "PageParam": {
-        "name": "page",
-        "in": "query",
-        "required": false,
-        "schema": { "type": "integer", "minimum": 1, "default": 1 }
-      },
-      "LimitParam": {
-        "name": "limit",
-        "in": "query",
-        "required": false,
-        "schema": { "type": "integer", "minimum": 1, "default": 20 }
       }
     },
     "responses": {
@@ -832,7 +807,12 @@
           "ingredientType": { "type": "string", "description": "지급되는 재료 종류 (예: 양파)" },
           "stampCount": { "type": "integer", "minimum": 1, "description": "지급 재료 스탬프 개수" },
           "status": { "$ref": "#/components/schemas/MissionStatus" },
-          "createdBy": { "type": "integer", "format": "int64", "description": "등록한 관리자(User)의 userId" }
+          "createdBy": { "type": "integer", "format": "int64", "description": "등록한 관리자(User)의 userId" },
+          "participationStatus": {
+            "allOf": [{ "$ref": "#/components/schemas/ParticipationStatus" }],
+            "nullable": true,
+            "description": "호출자 본인의 참여 상태 (null|JOINED|COMPLETED). CUSTOMER가 GET /missions, GET /missions/{missionId}로 조회할 때만 포함되며, ADMIN의 GET /missions 목록 응답에는 없다."
+          }
         },
         "required": ["missionId", "title", "startAt", "endAt", "ingredientType", "stampCount", "status", "createdBy"]
       },
@@ -860,13 +840,6 @@
           "ingredientType": { "type": "string" },
           "stampCount": { "type": "integer", "minimum": 1 }
         }
-      },
-      "MissionStatusUpdateRequest": {
-        "type": "object",
-        "properties": {
-          "status": { "$ref": "#/components/schemas/MissionStatus" }
-        },
-        "required": ["status"]
       },
       "MissionParticipation": {
         "type": "object",
@@ -924,7 +897,11 @@
             "items": { "$ref": "#/components/schemas/RecipeItem" },
             "description": "필요 재료 목록 (재료 종류 + 필요 수량)"
           },
-          "status": { "$ref": "#/components/schemas/RewardStatus" }
+          "status": { "$ref": "#/components/schemas/RewardStatus" },
+          "canRedeem": {
+            "type": "boolean",
+            "description": "호출자 본인의 재료 스탬프 보유량 기준 교환 가능 여부. GET /rewards 응답에만 포함되며, 생성/수정 응답에는 없다."
+          }
         },
         "required": ["rewardId", "name", "recipe", "status"]
       },
@@ -966,11 +943,11 @@
           "userId": { "type": "integer", "format": "int64" },
           "rewardId": { "type": "integer", "format": "int64" },
           "redeemedAt": { "type": "string", "format": "date-time" },
-          "rewardName": { "type": "string", "description": "조인된 혜택명 (목록 조회 시 포함, 7-wireframe.md 8번 화면 참고)" },
-          "consumedStamps": {
+          "rewardName": { "type": "string", "description": "조인된 혜택명 (POST /redemptions, GET /redemptions/me 응답 모두에 포함)" },
+          "usedIngredients": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/RecipeItem" },
-            "description": "교환 시 차감된 재료별 수량 (관련 StampTransaction 조회 결과, 목록 조회 시 포함)"
+            "description": "교환 시 차감된 재료별 수량 (관련 StampTransaction 조회 결과). GET /redemptions/me 목록 조회 응답에만 포함되며, POST /redemptions 생성 응답에는 없다."
           }
         },
         "required": ["redemptionId", "userId", "rewardId", "redeemedAt"]

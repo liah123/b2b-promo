@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('../../docs/swagger.json');
 
 const app = express();
 
@@ -12,6 +14,10 @@ app.use(
     credentials: true,
   })
 );
+
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 app.use('/', require('./routes'));
 
