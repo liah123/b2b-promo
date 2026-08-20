@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { useMissions } from '../../hooks/useMissions';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import type { MissionStatus } from '../../types/domain';
 import './missions.css';
 
@@ -27,7 +28,7 @@ export default function MissionListPage() {
         <Link key={m.missionId} to={`/missions/${m.missionId}`} className="mission-card">
           <span className={`status-badge ${m.status === 'ACTIVE' ? '' : 'muted'}`}>{STATUS_LABEL[m.status]}</span>
           <h3>{m.title}</h3>
-          <p>지급 스탬프: {m.ingredientType} {m.stampCount}개</p>
+          <p>지급 스탬프: {getIngredientIcon(m.ingredientType)} {m.ingredientType} {m.stampCount}개</p>
           <p>{formatDate(m.startAt)} ~ {formatDate(m.endAt)}</p>
           {m.participationStatus && <p>{PARTICIPATION_LABEL[m.participationStatus]}</p>}
         </Link>

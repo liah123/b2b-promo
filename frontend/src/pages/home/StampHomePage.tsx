@@ -2,6 +2,8 @@ import { Link } from 'react-router';
 import { useAuthStore } from '../../store/authStore';
 import { useStampBalance, useStampHistory } from '../../hooks/useStamps';
 import { useRewards, useRedeemReward } from '../../hooks/useRewards';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
+import { getDishIcon } from '../../utils/dishIcon';
 import '../missions/missions.css';
 import '../stamps/stamps.css';
 
@@ -30,6 +32,7 @@ export default function StampHomePage() {
           <div className="stamp-balance-scroll">
             {balances.map((b) => (
               <div key={b.ingredientType} className="stamp-balance-card">
+                <div className="stamp-balance-icon">{getIngredientIcon(b.ingredientType)}</div>
                 <div className="stamp-balance-type">{b.ingredientType}</div>
                 <div className="stamp-balance-count">{b.balance}개</div>
               </div>
@@ -46,8 +49,9 @@ export default function StampHomePage() {
           <div className="mission-grid">
             {redeemableRewards.map((r) => (
               <div key={r.rewardId} className="mission-card">
+                <div className="mission-card-icon">{getDishIcon(r.name)}</div>
                 <h4>{r.name}</h4>
-                <p>필요 스탬프: {r.recipe.map((x) => `${x.ingredientType}${x.quantity}`).join(', ')}</p>
+                <p>필요 스탬프: {r.recipe.map((x) => `${getIngredientIcon(x.ingredientType)}${x.ingredientType}${x.quantity}`).join(', ')}</p>
                 <button
                   className="mission-cta"
                   disabled={redeem.isPending}
@@ -76,7 +80,7 @@ export default function StampHomePage() {
               {recentHistory.map((h) => (
                 <tr key={h.transactionId}>
                   <td data-label="일시">{h.createdAt}</td>
-                  <td data-label="종류">{h.ingredientType}</td>
+                  <td data-label="종류">{getIngredientIcon(h.ingredientType)} {h.ingredientType}</td>
                   <td data-label="구분">{h.type === 'EARN' ? '적립' : '차감'}</td>
                   <td data-label="수량">
                     <span className={h.type === 'EARN' ? 'text-success' : 'text-danger'}>

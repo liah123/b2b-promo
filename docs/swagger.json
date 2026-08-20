@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Stamp Up API",
+    "title": "YumStamp API",
     "version": "1.0.0",
     "description": "식자재 유통 B2B 미션형 프로모션·재료 스탬프·요리 리워드 교환 API"
   },

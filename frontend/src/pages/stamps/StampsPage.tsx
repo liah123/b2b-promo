@@ -1,4 +1,5 @@
 import { useStampBalance, useStampHistory } from '../../hooks/useStamps';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import '../missions/missions.css'; // participation-table 재사용
 import './stamps.css';
 
@@ -23,6 +24,7 @@ export default function StampsPage() {
         <div className="stamp-balance-scroll">
           {balances.map((b) => (
             <div key={b.ingredientType} className="stamp-balance-card">
+              <div className="stamp-balance-icon">{getIngredientIcon(b.ingredientType)}</div>
               <div className="stamp-balance-type">{b.ingredientType}</div>
               <div className="stamp-balance-count">{b.balance}개</div>
             </div>
@@ -42,7 +44,7 @@ export default function StampsPage() {
             {history.map((h) => (
               <tr key={h.transactionId}>
                 <td data-label="일시">{h.createdAt}</td>
-                <td data-label="종류">{h.ingredientType}</td>
+                <td data-label="종류">{getIngredientIcon(h.ingredientType)} {h.ingredientType}</td>
                 <td data-label="구분">{h.type === 'EARN' ? '적립' : '차감'}</td>
                 <td data-label="수량"><AmountCell type={h.type} amount={h.amount} /></td>
                 <td data-label="사유">{h.reason}</td>

@@ -18,6 +18,12 @@
   display: block;
 }
 
+.mission-card-icon {
+  width: 56px; height: 56px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; background: #eefbef; border-radius: 9999px;
+}
+
 .status-badge {
   border-radius: 9999px;
   padding: 4px 10px;

@@ -1,5 +1,6 @@
 import { useMission } from '../../hooks/useMissions';
 import { useCompleteParticipation, useMyParticipations } from '../../hooks/useParticipations';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import type { MissionParticipation } from '../../types/domain';
 import './missions.css';
 
@@ -9,7 +10,9 @@ function CompletedRow({ p }: { p: MissionParticipation }) {
     <tr>
       <td data-label="미션명">{p.missionTitle}</td>
       <td data-label="완료일">{p.completedAt}</td>
-      <td data-label="지급 스탬프">{mission ? `${mission.ingredientType} ${mission.stampCount}개` : '-'}</td>
+      <td data-label="지급 스탬프">
+        {mission ? `${getIngredientIcon(mission.ingredientType)} ${mission.ingredientType} ${mission.stampCount}개` : '-'}
+      </td>
     </tr>
   );
 }

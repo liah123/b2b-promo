@@ -1,4 +1,6 @@
 import { useRewards, useRedeemReward } from '../../hooks/useRewards';
+import { getDishIcon } from '../../utils/dishIcon';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import '../missions/missions.css';
 import '../stamps/stamps.css';
 
@@ -16,12 +18,13 @@ export default function RewardListPage() {
         const isThisCard = redeem.variables === r.rewardId;
         return (
           <div key={r.rewardId} className="mission-card">
+            <div className="mission-card-icon">{getDishIcon(r.name)}</div>
             <span className={`status-badge ${r.canRedeem ? '' : 'muted'}`}>
               {r.canRedeem ? '받을 수 있음' : '받을 수 없음'}
             </span>
             <h3>{r.name}</h3>
             {r.description && <p>{r.description}</p>}
-            <p>필요 스탬프: {r.recipe.map((x) => `${x.ingredientType}${x.quantity}`).join(', ')}</p>
+            <p>필요 스탬프: {r.recipe.map((x) => `${getIngredientIcon(x.ingredientType)}${x.ingredientType}${x.quantity}`).join(', ')}</p>
             <button
               className="mission-cta"
               disabled={!r.canRedeem || redeem.isPending}

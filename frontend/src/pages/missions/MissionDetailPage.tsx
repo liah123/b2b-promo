@@ -1,6 +1,7 @@
 import { useParams } from 'react-router';
 import { useMission } from '../../hooks/useMissions';
 import { useJoinMission } from '../../hooks/useParticipations';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import './missions.css';
 
 function formatDate(iso: string) {
@@ -30,7 +31,7 @@ export default function MissionDetailPage() {
       {mission.description && <p>{mission.description}</p>}
       <p>기간: {formatDate(mission.startAt)} ~ {formatDate(mission.endAt)}</p>
       {mission.completionCondition && <p>적립 조건: {mission.completionCondition}</p>}
-      <p>지급 스탬프: {mission.ingredientType} {mission.stampCount}개</p>
+      <p>지급 스탬프: {getIngredientIcon(mission.ingredientType)} {mission.ingredientType} {mission.stampCount}개</p>
       <button
         className="mission-cta"
         disabled={!canJoin || join.isPending}

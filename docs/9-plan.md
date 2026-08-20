@@ -1,4 +1,4 @@
-# 개발 실행계획 — Stamp Up
+# 개발 실행계획 — YumStamp
 
 버전: v1.33 (작성일: 2026-08-20, v1.32→v1.33: FE-13(반응형 다듬기+에러 처리+전체 E2E) 완료 처리 — 모든 FE 작업 완료. 정적 감사로 9개 페이지의 isError 미처리를 발견해 보강, 브라우저 실측으로 participation-table의 실제 가로 스크롤 버그(tr box-sizing) 발견·수정. 신규 계정으로 4-user-scenari.md 1~14번 시나리오 전부(정상 6, 관리자 3, 예외 5) 순서대로 실행해 완료조건 6개 전부 체크 — 이로써 docs/9-plan.md의 DB/BE/FE 전체 30개 Task 완료)
 

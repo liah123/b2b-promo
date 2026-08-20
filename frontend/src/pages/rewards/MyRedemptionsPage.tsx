@@ -1,4 +1,6 @@
 import { useMyRedemptions } from '../../hooks/useRewards';
+import { getDishIcon } from '../../utils/dishIcon';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import '../missions/missions.css';
 
 export default function MyRedemptionsPage() {
@@ -19,9 +21,9 @@ export default function MyRedemptionsPage() {
           {redemptions.map((r) => (
             <tr key={r.redemptionId}>
               <td data-label="일시">{r.redeemedAt}</td>
-              <td data-label="혜택명">{r.rewardName}</td>
+              <td data-label="혜택명">{getDishIcon(r.rewardName ?? '')} {r.rewardName}</td>
               <td data-label="사용된 스탬프">
-                {(r.usedIngredients ?? []).map((x) => `${x.ingredientType}${x.quantity}`).join(', ')}
+                {(r.usedIngredients ?? []).map((x) => `${getIngredientIcon(x.ingredientType)}${x.ingredientType}${x.quantity}`).join(', ')}
               </td>
             </tr>
           ))}

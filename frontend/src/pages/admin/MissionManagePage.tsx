@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import { useCreateMission, useMissions, useUpdateMission, useUpdateMissionStatus } from '../../hooks/useMissions';
 import { useConfirmParticipation, useMissionParticipations } from '../../hooks/useParticipations';
 import type { Mission, MissionCreateRequest, MissionStatus, ParticipationStatus } from '../../types/domain';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import '../missions/missions.css';
 
 const STATUS_LABEL: Record<MissionStatus, string> = { PENDING: '예정', ACTIVE: '진행중', ENDED: '종료' };
@@ -174,7 +175,7 @@ export default function MissionManagePage() {
                   <span className={`status-badge ${m.status === 'ACTIVE' ? '' : 'muted'}`}>{STATUS_LABEL[m.status]}</span>
                 </td>
                 <td data-label="기간">{m.startAt.slice(0, 10)} ~ {m.endAt.slice(0, 10)}</td>
-                <td data-label="지급 스탬프">{m.ingredientType} {m.stampCount}개</td>
+                <td data-label="지급 스탬프">{getIngredientIcon(m.ingredientType)} {m.ingredientType} {m.stampCount}개</td>
                 <td data-label="관리">
                   <button onClick={() => setEditingId(m.missionId)}>수정</button>
                   {m.status === 'ACTIVE' && (

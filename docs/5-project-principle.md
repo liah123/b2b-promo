@@ -1,4 +1,4 @@
-# 프로젝트 구조 설계 원칙 — Stamp Up
+# 프로젝트 구조 설계 원칙 — YumStamp
 
 버전: v1.1 (작성일: 2026-08-13, v1.0→v1.1: docs 정합성 검토 — 근거 문서 버전 갱신, 6장 pages에 스탬프 홈 화면 추가, 7장 마이그레이션 파일 순서를 FK 의존성에 맞게 재정렬)
 근거 문서: `docs/1-domain-definition.md` (v1.6), `docs/2-usecase.md`, `docs/3-PRD.md` (v1.5), `docs/4-user-scenari.md` (v1.1)

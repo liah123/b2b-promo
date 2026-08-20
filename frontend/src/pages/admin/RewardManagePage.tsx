@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useCreateReward, useRewards, useUpdateReward, useUpdateRewardStatus } from '../../hooks/useRewards';
 import type { Reward, RewardCreateRequest, RecipeItem } from '../../types/domain';
+import { getDishIcon } from '../../utils/dishIcon';
+import { getIngredientIcon } from '../../utils/ingredientIcon';
 import '../missions/missions.css';
 
 const STATUS_LABEL: Record<'ACTIVE' | 'INACTIVE', string> = { ACTIVE: '활성', INACTIVE: '비활성' };
@@ -137,8 +139,8 @@ export default function RewardManagePage() {
         <tbody>
           {(rewards ?? []).map((r) => (
             <tr key={r.rewardId}>
-              <td data-label="혜택명">{r.name}</td>
-              <td data-label="필요 스탬프">{r.recipe.map((x) => `${x.ingredientType}${x.quantity}`).join(', ')}</td>
+              <td data-label="혜택명">{getDishIcon(r.name)} {r.name}</td>
+              <td data-label="필요 스탬프">{r.recipe.map((x) => `${getIngredientIcon(x.ingredientType)}${x.ingredientType}${x.quantity}`).join(', ')}</td>
               <td data-label="상태">
                 <span className={`status-badge ${r.status === 'ACTIVE' ? '' : 'muted'}`}>{STATUS_LABEL[r.status]}</span>
               </td>
