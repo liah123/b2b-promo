@@ -35,3 +35,6 @@ coverage/
 
 # misc
 *.local
+
+# Playwright MCP 임시 스냅샷/콘솔로그 (E2E 리포트 산출물이 아님)
+.playwright-mcp/
