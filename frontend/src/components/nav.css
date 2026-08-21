@@ -53,6 +53,7 @@
 
 .app-main {
   min-height: calc(100svh - 61px);
+  padding: 20px 20px 0;
 }
 
 /* 모바일 하단 GNB — 데스크탑에서는 숨김 */
