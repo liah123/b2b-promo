@@ -1,6 +1,6 @@
 import { useAuthStore } from '../store/authStore';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 let refreshPromise: Promise<string | null> | null = null;
 
