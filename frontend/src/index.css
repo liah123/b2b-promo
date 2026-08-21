@@ -115,3 +115,33 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.page-section {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.page-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.page-section-header h3 { margin: 0; }
+
+.page-section-link {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #eefbef;
+  color: #2fae45;
+  text-decoration: none;
+  white-space: nowrap;
+}

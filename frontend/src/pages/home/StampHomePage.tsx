@@ -24,8 +24,11 @@ export default function StampHomePage() {
     <div>
       <h2>{user?.name}님, 안녕하세요</h2>
 
-      <section>
-        <h3>보유 스탬프 요약</h3>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3>보유 스탬프 요약</h3>
+          <Link to="/stamps" className="page-section-link">전체보기 ›</Link>
+        </div>
         {!balances || balances.length === 0 ? (
           <p>보유한 스탬프가 없습니다</p>
         ) : (
@@ -41,8 +44,11 @@ export default function StampHomePage() {
         )}
       </section>
 
-      <section>
-        <h3>지금 받을 수 있는 혜택</h3>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3>지금 받을 수 있는 혜택</h3>
+          <Link to="/rewards" className="page-section-link">전체보기 ›</Link>
+        </div>
         {redeemableRewards.length === 0 ? (
           <p>지금 받을 수 있는 혜택이 없습니다</p>
         ) : (
@@ -64,11 +70,13 @@ export default function StampHomePage() {
             ))}
           </div>
         )}
-        <Link to="/rewards">쿠폰/혜택 전체 보기</Link>
       </section>
 
-      <section>
-        <h3>최근 이용 내역</h3>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3>최근 이용 내역</h3>
+          <Link to="/stamps" className="page-section-link">전체보기 ›</Link>
+        </div>
         {recentHistory.length === 0 ? (
           <p>이용 내역이 없습니다</p>
         ) : (
@@ -92,7 +100,6 @@ export default function StampHomePage() {
             </tbody>
           </table>
         )}
-        <Link to="/stamps">이용 내역 전체 보기</Link>
       </section>
     </div>
   );

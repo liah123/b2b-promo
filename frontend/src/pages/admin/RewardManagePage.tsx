@@ -92,8 +92,8 @@ export default function RewardManagePage() {
   const updateReward = useUpdateReward();
   const updateStatus = useUpdateRewardStatus();
 
-  if (isLoading) return <div>불러오는 중...</div>;
-  if (isError) return <div style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (isLoading) return <div className="page-section">불러오는 중...</div>;
+  if (isError) return <div className="page-section" style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
 
   // pg bigint(reward_id)가 문자열로 내려오므로 editingId는 'new' 여부로만 신규/수정을 구분한다.
   const isEditingExisting = editingId !== null && editingId !== 'new';
@@ -110,7 +110,7 @@ export default function RewardManagePage() {
   };
 
   return (
-    <div>
+    <div className="page-section">
       <h2>혜택 관리</h2>
 
       {editingId === null && (

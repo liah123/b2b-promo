@@ -1,5 +1,7 @@
 .stamp-balance-scroll {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;

@@ -8,12 +8,12 @@ export default function RewardListPage() {
   const { data: rewards, isLoading, isError } = useRewards();
   const redeem = useRedeemReward();
 
-  if (isLoading) return <div>불러오는 중...</div>;
-  if (isError) return <div style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
-  if (!rewards || rewards.length === 0) return <div>받을 수 있는 혜택이 없습니다.</div>;
+  if (isLoading) return <div className="page-section">불러오는 중...</div>;
+  if (isError) return <div className="page-section" style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (!rewards || rewards.length === 0) return <div className="page-section">받을 수 있는 혜택이 없습니다.</div>;
 
   return (
-    <div className="mission-grid">
+    <div className="page-section mission-grid">
       {rewards.map((r) => {
         const isThisCard = redeem.variables === r.rewardId;
         return (

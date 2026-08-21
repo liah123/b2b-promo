@@ -109,8 +109,8 @@ export default function MissionManagePage() {
   const updateMission = useUpdateMission();
   const updateStatus = useUpdateMissionStatus();
 
-  if (isLoading) return <div>불러오는 중...</div>;
-  if (isError) return <div style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (isLoading) return <div className="page-section">불러오는 중...</div>;
+  if (isError) return <div className="page-section" style={{ color: '#e5484d' }}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
 
   // pg가 bigint(mission_id)를 문자열로 내려주므로 missionId는 실제로는 string이다(도메인 타입은 number로 선언돼 있지만
   // 런타임 값은 문자열). typeof 비교 대신 'new' 여부로만 신규/수정을 구분한다.
@@ -140,7 +140,7 @@ export default function MissionManagePage() {
   };
 
   return (
-    <div>
+    <div className="page-section">
       <h2>적립 항목 관리</h2>
 
       {editingId === null && (

@@ -30,7 +30,7 @@ export default function MyPage() {
   return (
     <div>
       <h2>마이페이지</h2>
-      <section>
+      <section className="page-section">
         <h3>내 정보</h3>
         <p>이메일: {user?.email}</p>
         <form onSubmit={handleNameSubmit} className="auth-form">
@@ -40,7 +40,7 @@ export default function MyPage() {
           <button className="auth-submit" type="submit" disabled={updateMe.isPending}>저장</button>
         </form>
       </section>
-      <section>
+      <section className="page-section">
         <h3>비밀번호 변경</h3>
         <form onSubmit={handlePasswordSubmit} className="auth-form">
           <label className="auth-label">현재 비밀번호</label>

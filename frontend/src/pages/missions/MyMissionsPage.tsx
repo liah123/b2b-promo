@@ -24,11 +24,12 @@ export default function MyMissionsPage() {
   const joined = list?.filter((p) => p.status === 'JOINED') ?? [];
   const completed = list?.filter((p) => p.status === 'COMPLETED') ?? [];
 
-  if (isLoading) return <div>불러오는 중...</div>;
-  if (isError) return <div style={{ color: '#e5484d' }}>내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (isLoading) return <div className="page-section">불러오는 중...</div>;
+  if (isError) return <div className="page-section" style={{ color: '#e5484d' }}>내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
 
   return (
     <div>
+      <section className="page-section">
       <h2>직원 확인 대기</h2>
       {joined.length === 0 ? (
         <p>표시할 항목이 없습니다</p>
@@ -61,7 +62,9 @@ export default function MyMissionsPage() {
           </tbody>
         </table>
       )}
+      </section>
 
+      <section className="page-section">
       <h2>적립 완료</h2>
       {completed.length === 0 ? (
         <p>표시할 항목이 없습니다</p>
@@ -81,6 +84,7 @@ export default function MyMissionsPage() {
           </tbody>
         </table>
       )}
+      </section>
     </div>
   );
 }

@@ -6,12 +6,12 @@ import '../missions/missions.css';
 export default function MyRedemptionsPage() {
   const { data: redemptions, isLoading, isError } = useMyRedemptions();
 
-  if (isLoading) return <div>불러오는 중...</div>;
-  if (isError) return <div style={{ color: '#e5484d' }}>내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
-  if (!redemptions || redemptions.length === 0) return <p>교환 내역이 없습니다</p>;
+  if (isLoading) return <div className="page-section">불러오는 중...</div>;
+  if (isError) return <div className="page-section" style={{ color: '#e5484d' }}>내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (!redemptions || redemptions.length === 0) return <p className="page-section">교환 내역이 없습니다</p>;
 
   return (
-    <div>
+    <div className="page-section">
       <h2>쿠폰 사용 내역</h2>
       <table className="participation-table">
         <thead>
